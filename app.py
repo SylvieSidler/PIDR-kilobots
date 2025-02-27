@@ -3,23 +3,7 @@ from flask import Flask,  Response, send_file
 
 app = Flask(__name__)
 
-camera = cv2.VideoCapture(0) # Connexion avec la caméra qui peut être celle du PC ou celle d'une caméra branchée
-
-def gen_frames():
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
- 
-# Permet d'obtenir une vidéo de ce qui est filmé par la caméra
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+camera = cv2.VideoCapture(0) # Connexion avec la caméra qui peut être celle du PC ou celle d'une caméra branchée (téléphone)
 
 # Permet d'obtenir une image de ce qui est filmé au moment ou la route est spécifiée
 @app.route('/capture_image')
