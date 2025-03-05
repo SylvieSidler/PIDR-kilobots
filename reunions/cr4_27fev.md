@@ -22,7 +22,7 @@ Quand le processus démarre, il faut qu'il soit à l'arrêt pour donner une sém
 - stop : couper la caméra
 - capture_image : capture de la vue de caméra 
 
-Quand il y a un problème il faudrait renvoyer un code d'erreur (côté serveur ≈ 500) au lieu de couper l'accès, ça devrait permettre d'avoir une réponse HTTP.
+Quand il y a un problème il faudrait renvoyer un code d'erreur (côté serveur ≈ 500) au lieu de couper l'accès, ça permettra d'avoir une réponse HTTP.
 
 flask : comment transmettre données images dans une réponse HTTP en brut à sérialiser 
 L'objet frame représente l'image dans [[../app.py]].
@@ -79,7 +79,7 @@ Des photos ont été prises pour avoir des images pour l'analyse et la détectio
 
 # TODO 
 - faire fonctionner le serveur avec les réponses brutes en HTTP
-- tester la détetion d'image avec le code de Hugh partagé par Mr. Boumaza
+- tester la détection d'image avec le code de Hugh partagé par Mr. Boumaza
 - commencer à manipuler le code pour le mouvement de kilobots 
 
 # Prochaine réunion : jeudi 15h15 
