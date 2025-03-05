@@ -47,9 +47,9 @@ if __name__ == '__main__':
 # Comment ça fonctionne : 
 # Après ouverture de l'environnement et installation des librairies (opencv et Flask)
 # Il faut lancer à nouveau terminal
-# Et exécuter la commande suivante : curl http://localhost:5000/start
+# Et exécuter la commande suivante : curl http://localhost:5001/start
 # Permettant le démarrage de la caméra. Cette commande peut être effectué dans n'importe quel dossier, il est juste bon à noter que l'image que vous capturerez sera enregistrée là ou vous vous situez
-# La commande suivante : curl http://localhost:5000/capture_image --output image.jpg
+# La commande suivante : curl http://localhost:5001/capture_image --output image.jpg
 # Permet de capturer l'image
-# Et pour finir la commande suivante : curl http://localhost:5000/stop
+# Et pour finir la commande suivante : curl http://localhost:5001/stop
 # Stoppe la caméra
