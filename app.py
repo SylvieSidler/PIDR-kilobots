@@ -1,20 +1,55 @@
-import cv2 # À installer après avoir créé un environnement avec la commande : pip install flask opencv-python
-from flask import Flask,  Response, send_file
+import cv2
+import threading
+from flask import Flask, Response
 
 app = Flask(__name__)
+camera = None  # Caméra initialement désactivée
+lock = threading.Lock() # Empêche deux requêtes simultanées
 
-camera = cv2.VideoCapture(0) # Connexion avec la caméra qui peut être celle du PC ou celle d'une caméra branchée (téléphone)
+@app.route('/start', methods=['GET'])
+def start_camera():
+    global camera # Global car caméra définit dans tout le fichier
+    with lock:
+        if camera is None: 
+            camera = cv2.VideoCapture(0) # Ouvre la caméra par défaut
+            if not camera.isOpened():
+                camera = None
+                return "Failed to access the camera", 500
+    return "Camera started", 200
 
-# Permet d'obtenir une image de ce qui est filmé au moment ou la route est spécifiée
-@app.route('/capture_image')
+@app.route('/stop', methods=['GET'])
+def stop_camera():
+    global camera
+    with lock:
+        if camera is not None:
+            camera.release() # Libère les ressources associées à la caméra
+            camera = None
+    return "Camera stopped", 200
+
+@app.route('/capture_image', methods=['GET'])
 def capture_image():
-    success, frame = camera.read()
-    if success:
-        image_path = "captured_image1.jpg"
-        cv2.imwrite(image_path, frame)
-        return send_file(image_path, mimetype='image/jpeg')
-    else:
-        return "Failed to capture image", 500
+    global camera
+    with lock:
+        if camera is None:
+            return "Camera is not started", 400  # Mauvaise requête (caméra non démarrée)
+
+        success, frame = camera.read() # frame : image capturée 
+        if not success:
+            return "Failed to capture image", 500  # Erreur interne du serveur
+
+        _, buffer = cv2.imencode('.jpg', frame) # Converti l'image en jpeg
+        return Response(buffer.tobytes(), mimetype='image/jpeg') # Renvoie l'image au client
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5001) # Ne faites pas gaffe au port, le port 5000 était déjà utilisé lorsque j'ai codé
+
+
+# Comment ça fonctionne : 
+# Après ouverture de l'environnement et installation des librairies (opencv et Flask)
+# Il faut lancer à nouveau terminal
+# Et exécuter la commande suivante : curl http://localhost:5000/start
+# Permettant le démarrage de la caméra. Cette commande peut être effectué dans n'importe quel dossier, il est juste bon à noter que l'image que vous capturerez sera enregistrée là ou vous vous situez
+# La commande suivante : curl http://localhost:5000/capture_image --output image.jpg
+# Permet de capturer l'image
+# Et pour finir la commande suivante : curl http://localhost:5000/stop
+# Stoppe la caméra
