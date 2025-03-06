@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 
-def show_circles_on_img(pathToImage):
-    img= cv2.imread(pathToImage,cv2.IMREAD_COLOR)
-    output = img.copy()
-    grayimg = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+
+def show_circles_on_img(image_array):
+    
+    output = image_array.copy()
+    grayimg = cv2.cvtColor(image_array,cv2.COLOR_BGR2GRAY)
     gimgblur = cv2.GaussianBlur(grayimg,(3,3), 0)
     rect_x= 2*177
     rect_y=2*101
@@ -21,7 +22,7 @@ def show_circles_on_img(pathToImage):
         for (x,y,r) in detected_circles:
             cv2.circle(output, (x,y), r, (0,255,0),4)
             cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
-        height,width= img.shape[:2]
+        height,width= image_array.shape[:2]
         scale = 0.5
         smol_img = cv2.resize(output, (int(width*scale), int(height*scale)))    
         cv2.imshow("output", smol_img)
