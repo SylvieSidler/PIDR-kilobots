@@ -3,6 +3,7 @@ import threading
 import numpy as np
 from flask import Flask, Response
 from functionsImageDetection import *
+import pickle
 
 app = Flask(__name__)
 camera = None  # Caméra initialement désactivée
@@ -13,7 +14,7 @@ def start_camera():
     global camera
     with lock:
         if camera is None:
-            camera = cv2.VideoCapture(0)  # Ouvre la caméra par défaut
+            camera = cv2.VideoCapture(2)  # Ouvre la caméra par défaut
             if not camera.isOpened():
                 camera = None
                 return "Failed to access the camera", 500
@@ -39,25 +40,9 @@ def capture_image():
         if not success:
             return "Failed to capture image", 500
 
-        _, buffer = cv2.imencode('.jpg', frame)
-        return Response(buffer.tobytes(), mimetype='image/jpeg')
+        serialized_as_json = json.dumps(pickle.dumps(a).decode('utf-8'))
 
-@app.route('/detection_cercle', methods=['GET'])
-def detection_cercle():
-    global camera
-    with lock:
-        if camera is None:
-            return "Camera is not started", 400
-
-        success, frame = camera.read()
-        if not success or frame is None:
-            return "Failed to capture image", 500
-
-        processed_image = show_circles_on_img(frame)
-
-        _, buffer = cv2.imencode('.jpg', processed_image)
-        return Response(buffer.tobytes(), mimetype='image/jpeg')
-
+        return serialized_as_json
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5001) # Ne faites pas gaffe au port, le port 5000 était déjà utilisé lorsque j'ai codé
