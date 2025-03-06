@@ -1,9 +1,10 @@
 import cv2
 import threading
 import numpy as np
-from flask import Flask, Response
+from flask import Flask, Response, jsonify
 from functionsImageDetection import *
 import pickle
+import json
 
 app = Flask(__name__)
 camera = None  # Caméra initialement désactivée
@@ -40,9 +41,9 @@ def capture_image():
         if not success:
             return "Failed to capture image", 500
 
-        serialized_as_json = json.dumps(pickle.dumps(a).decode('utf-8'))
+        serialized_as_json = json.dumps(pickle.dumps(frame).decode('latin-1'))
 
-        return serialized_as_json
+        return jsonify(serialized_as_json)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5001) # Ne faites pas gaffe au port, le port 5000 était déjà utilisé lorsque j'ai codé
