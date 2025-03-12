@@ -2,25 +2,12 @@ import cv2
 import numpy as np
 
 
-def show_circles_on_img(image_array):
-
+def show_circles_on_img(coord, image_array):
     output = image_array.copy()
-    grayimg = cv2.cvtColor(image_array,cv2.COLOR_BGR2GRAY)
-    gimgblur = cv2.GaussianBlur(grayimg,(3,3), 0)
-    #rect_x= 2*177
-    #rect_y=2*101
-    #rect_w=(2*544 -2*177)
-    #rect_h=2*495-2*101
-    #mask=np.zeros_like(grayimg)
-    #cv2.rectangle(mask,(rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), (255), thickness=-1)
-    #masked_img= cv2.bitwise_and(gimgblur,gimgblur,mask=mask)
+    if coord is not None: 
 
-    #detected_circles = cv2.HoughCircles(masked_img,cv2.HOUGH_GRADIENT,dp =3,minDist=20, param1=60, param2=85, minRadius=20, maxRadius=25)
-    detected_circles = cv2.HoughCircles(gimgblur,cv2.HOUGH_GRADIENT,dp =3,minDist=20, param1=60, param2=85, minRadius=20, maxRadius=50)
-    if detected_circles is not None: 
-
-        detected_circles = np.round(detected_circles[0,:]).astype("int") 
-        for (x,y,r) in detected_circles:
+        coord = np.round(coord[0,:]).astype("int") 
+        for (x,y,r) in coord:
             cv2.circle(output, (x,y), r, (0,255,0),4)
             cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
         height,width= image_array.shape[:2]
@@ -31,46 +18,22 @@ def show_circles_on_img(image_array):
         cv2.destroyAllWindows()
     else:
         print("no circles detected")
+        
 
-def show_coordinates(pathToImage):
-    img= cv2.imread(pathToImage,cv2.IMREAD_COLOR)
-    output = img.copy()
-    grayimg = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    gimgblur = cv2.GaussianBlur(grayimg,(3,3), 0)
-    rect_x= 2*177
-    rect_y=2*101
-    rect_w=(2*544 -2*177)
-    rect_h=2*495-2*101
-    mask=np.zeros_like(grayimg)
-    cv2.rectangle(mask,(rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), (255), thickness=-1)
-    masked_img= cv2.bitwise_and(gimgblur,gimgblur,mask=mask)
-
-    detected_circles = cv2.HoughCircles(masked_img,cv2.HOUGH_GRADIENT,dp =3,minDist=20, param1=60, param2=85, minRadius=20, maxRadius=25)
-    if detected_circles is not None: 
-        return detected_circles
-    else:
-        print("no circles detected")
-
-def return_circles_on_img(image_array):
-    
+def return_coordinates(image_array):
     output = image_array.copy()
     grayimg = cv2.cvtColor(image_array,cv2.COLOR_BGR2GRAY)
-    gimgblur = cv2.GaussianBlur(grayimg,(3,3), 0)
-    rect_x= 2*177
-    rect_y=2*101
-    rect_w=(2*544 -2*177)
-    rect_h=2*495-2*101
+    gimgblur = cv2.GaussianBlur(grayimg,(7,7), 0)
+    rect_x= 2*300
+    rect_y=2*170
+    rect_w=(2*920 -2*300)
+    rect_h=2*820-2*170
     mask=np.zeros_like(grayimg)
     cv2.rectangle(mask,(rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), (255), thickness=-1)
     masked_img= cv2.bitwise_and(gimgblur,gimgblur,mask=mask)
 
-    detected_circles = cv2.HoughCircles(masked_img,cv2.HOUGH_GRADIENT,dp =3,minDist=20, param1=60, param2=85, minRadius=20, maxRadius=25)
+    detected_circles = cv2.HoughCircles(masked_img,cv2.HOUGH_GRADIENT,dp =3,minDist=50, param1=80, param2=85, minRadius=30, maxRadius=40)
     if detected_circles is not None: 
-
-        detected_circles = np.round(detected_circles[0,:]).astype("int") 
-        for (x,y,r) in detected_circles:
-            cv2.circle(output, (x,y), r, (0,255,0),4)
-            cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
-        return output
+        return [detected_circles,image_array]
     else:
         print("no circles detected")

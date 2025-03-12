@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 import requests
-from src.functionsImageDetection import *
-from src.app import *
+from functionsImageDetection import *
+from app import *
 import json
 
 
@@ -19,8 +19,12 @@ def getImage():
 
 def detectCircles():
     img = getImage()
-    show_circles_on_img(img)
+    return return_coordinates(img)
 
+
+def showCircles():
+    coordandimg= detectCircles()
+    show_circles_on_img(coordandimg[0],coordandimg[1])
 
 if __name__=="__main__":
-    detectCircles()
+    showCircles()
