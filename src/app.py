@@ -1,17 +1,21 @@
 import cv2
 import threading
-from flask import Flask, Response
+import numpy as np
+from flask import Flask, Response, jsonify
+from src.functionsImageDetection import *
+import pickle
+import json
 
 app = Flask(__name__)
 camera = None  # Caméra initialement désactivée
-lock = threading.Lock() # Empêche deux requêtes simultanées
+lock = threading.Lock()  # Empêche deux requêtes simultanées
 
 @app.route('/start', methods=['GET'])
 def start_camera():
-    global camera # Global car caméra définit dans tout le fichier
+    global camera
     with lock:
-        if camera is None: 
-            camera = cv2.VideoCapture(0) # Ouvre la caméra par défaut
+        if camera is None:
+            camera = cv2.VideoCapture(2)  # Ouvre la caméra par défaut
             if not camera.isOpened():
                 camera = None
                 return "Failed to access the camera", 500
@@ -22,7 +26,7 @@ def stop_camera():
     global camera
     with lock:
         if camera is not None:
-            camera.release() # Libère les ressources associées à la caméra
+            camera.release()  # Libère les ressources associées à la caméra
             camera = None
     return "Camera stopped", 200
 
@@ -31,14 +35,15 @@ def capture_image():
     global camera
     with lock:
         if camera is None:
-            return "Camera is not started", 400  # Mauvaise requête (caméra non démarrée)
+            return "Camera is not started", 400
 
-        success, frame = camera.read() # frame : image capturée 
+        success, frame = camera.read()
         if not success:
-            return "Failed to capture image", 500  # Erreur interne du serveur
+            return "Failed to capture image", 500
 
-        _, buffer = cv2.imencode('.jpg', frame) # Converti l'image en jpeg
-        return Response(buffer.tobytes(), mimetype='image/jpeg') # Renvoie l'image au client
+        serialized_as_json = json.dumps(pickle.dumps(frame).decode('latin-1'))
+
+        return jsonify(serialized_as_json)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5001) # Ne faites pas gaffe au port, le port 5000 était déjà utilisé lorsque j'ai codé
