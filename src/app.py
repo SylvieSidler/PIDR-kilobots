@@ -2,7 +2,7 @@ import cv2
 import threading
 import numpy as np
 from flask import Flask, Response, jsonify
-from functionsImageDetection import *
+from src.functionsImageDetection import *
 import pickle
 import json
 

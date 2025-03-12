@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 import requests
-from functionsImageDetection import *
-from app import *
+from src.functionsImageDetection import *
+from src.app import *
 import json
 
 
