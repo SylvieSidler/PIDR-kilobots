@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import requests
 from functionsImageDetection import *
-from app import *
 import json
 
 
@@ -27,4 +26,6 @@ def showCircles():
     show_circles_on_img(coordandimg[0],coordandimg[1])
 
 if __name__=="__main__":
+    cv2.imshow("imqge",getImage())
+    cv2.waitKey(0)
     showCircles()
