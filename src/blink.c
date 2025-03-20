@@ -1,6 +1,9 @@
 #include <kilolib.h>
 #include <math.h>
 
+////////////////////////////////////////////////////////////////////////
+// SETUP
+
 // declare motion variable type
 typedef enum {
     STOP,
@@ -10,18 +13,17 @@ typedef enum {
 } motion_t;
 
 // declare variables
-
 typedef struct {
-  uint16_t gradient_value;
-  uint16_t recvd_gradient;
-  uint8_t new_message;
-  message_t msg;
-  int N_Neighbors; 
+    uint32_t last_update;
+    int N_Neighbors; 
 } USERDATA;
 
 extern USERDATA *mydata;
 
-#ifdef SIMULATOR
+extern char* (*callback_botinfo) (void);
+char *botinfo(void);
+
+#ifdef SIMULATOR /////////
 
 #include <stdio.h>    // for printf
 int UserdataSize = sizeof(USERDATA);
@@ -29,46 +31,57 @@ USERDATA *mydata;
 
 static char botinfo_buffer[10000];
 char *botinfo(void) {
-  int n;
-  char *p = botinfo_buffer;
-  n = sprintf (p, "ID: %d ", kilo_uid);
-  p += n;
+    int n;
+    char *p = botinfo_buffer;
+    n = sprintf (p, "ID: %d ", kilo_uid);
+    p += n;
+    n = sprintf (p, "Ns: %d, dist: %d\n ", mydata->N_Neighbors, find_nearest_N_dist());
+    p += n;
 
-  n = sprintf (p, "Ns: %d, dist: %d\n ", mydata->N_Neighbors, find_nearest_N_dist());
-  p += n;
-
-  return botinfo_buffer;
+    return botinfo_buffer;
 }
 
-#endif
+#endif ///////////////////
+
+
+////////////////////////////////////////////////////////////////////////
+// CODE 
 
 void setup() {
     // put your setup code here, to be run only once
     // Initialize the LED
-    set_color(RGB(0,1,1)); // cyan ?
-    delay(500);
-    set_color(RGB(1,1,1));
-    delay(1000);
+    set_color(RGB(3,3,3)); // white 
+    mydata->last_update = kilo_ticks;
+    mydata->N_Neighbors = 0;
 }
 
 void loop() {    
-    // Turn led off for 1 sec
-    set_color(RGB(0,0,0));
-    delay(1000); 
-    // Turn led red for 1 sec
-    set_color(RGB(1,0,0));
-    delay(1000);
-    // Turn led green for 1 sec
-    set_color(RGB(0,1,0));
-    delay(1000);
-    // Turn led blue for 1 sec
-    set_color(RGB(0,0,1));
-    delay(1000);
+    if (kilo_ticks > mydata->last_update + 31) {
+        set_color(RGB(0,0,0)); // off
+    }
+    if (kilo_ticks > mydata->last_update + 62) {
+        set_color(RGB(1,0,0)); // red
+    }
+    if (kilo_ticks > mydata->last_update + 93) {
+        set_color(RGB(0,1,0)); // green
+    }
+    if (kilo_ticks > mydata->last_update + 124) {
+        set_color(RGB(0,0,1)); // blue
+    }
+    if (kilo_ticks > mydata->last_update + 155) {
+        set_color(RGB(1,1,0)); // yellow
+        mydata->last_update = kilo_ticks;
+        mydata->N_Neighbors = 0;
+    }
 }
 
 int main() {
     // initialize hardware
     kilo_init();
+
+    SET_CALLBACK(botinfo, botinfo);
+    SET_CALLBACK(reset, setup);
+
     // register your program
     kilo_start(setup, loop);
 
