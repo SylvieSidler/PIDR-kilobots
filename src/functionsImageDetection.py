@@ -24,15 +24,15 @@ def return_coordinates(image_array):
     output = image_array.copy()
     grayimg = cv2.cvtColor(image_array,cv2.COLOR_BGR2GRAY)
     gimgblur = cv2.GaussianBlur(grayimg,(7,7), 0)
-    rect_x= 2*300
-    rect_y=2*170
-    rect_w=(2*920 -2*300)
-    rect_h=2*820-2*170
-    mask=np.zeros_like(grayimg)
-    cv2.rectangle(mask,(rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), (255), thickness=-1)
-    masked_img= cv2.bitwise_and(gimgblur,gimgblur,mask=mask)
+    #rect_x= 2*300
+    #rect_y=2*170
+    #rect_w=(2*920 -2*300)
+    #rect_h=2*820-2*170
+    #mask=np.zeros_like(grayimg)
+    #cv2.rectangle(mask,(rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), (255), thickness=-1)
+    #masked_img= cv2.bitwise_and(gimgblur,gimgblur,mask=mask)
 
-    detected_circles = cv2.HoughCircles(masked_img,cv2.HOUGH_GRADIENT,dp =3,minDist=50, param1=80, param2=85, minRadius=30, maxRadius=40)
+    detected_circles = cv2.HoughCircles(gimgblur,cv2.HOUGH_GRADIENT,dp =3,minDist=50, param1=80, param2=85, minRadius=20, maxRadius=40)
     if detected_circles is not None: 
         return [detected_circles,image_array]
     else:
