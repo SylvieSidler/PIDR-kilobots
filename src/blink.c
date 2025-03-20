@@ -1,5 +1,31 @@
 #include <kilolib.h>
 
+// declare motion variable type
+typedef enum {
+    STOP,
+    FORWARD,
+    LEFT,
+    RIGHT
+} motion_t;
+
+// declare variables
+
+typedef struct 
+{
+  uint16_t gradient_value;
+  uint16_t recvd_gradient;
+  uint8_t new_message;
+  message_t msg;
+ 
+} USERDATA;
+
+extern USERDATA *mydata;
+
+#ifdef SIMULATOR
+int UserdataSize = sizeof(USERDATA);
+USERDATA *mydata;
+#endif
+
 void setup() {
     // put your setup code here, to be run only once
     // Initialize the LED
