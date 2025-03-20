@@ -16,7 +16,7 @@ Avoir un fichier de configuration type json partagé à toutes les applications.
 ***
 # Prochaine réunion 
 
-## Jeudi ?? mars - ..h.. 
+## Jeudi 27 mars - 15h30 
 ## TODO 
 - réorganiser les fichiers dans le git 
 - ajouter le parametre de taille d'image 

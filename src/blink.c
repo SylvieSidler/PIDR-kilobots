@@ -1,4 +1,5 @@
 #include <kilolib.h>
+#include <math.h>
 
 // declare motion variable type
 typedef enum {
@@ -10,20 +11,35 @@ typedef enum {
 
 // declare variables
 
-typedef struct 
-{
+typedef struct {
   uint16_t gradient_value;
   uint16_t recvd_gradient;
   uint8_t new_message;
   message_t msg;
- 
+  int N_Neighbors; 
 } USERDATA;
 
 extern USERDATA *mydata;
 
 #ifdef SIMULATOR
+
+#include <stdio.h>    // for printf
 int UserdataSize = sizeof(USERDATA);
 USERDATA *mydata;
+
+static char botinfo_buffer[10000];
+char *botinfo(void) {
+  int n;
+  char *p = botinfo_buffer;
+  n = sprintf (p, "ID: %d ", kilo_uid);
+  p += n;
+
+  n = sprintf (p, "Ns: %d, dist: %d\n ", mydata->N_Neighbors, find_nearest_N_dist());
+  p += n;
+
+  return botinfo_buffer;
+}
+
 #endif
 
 void setup() {
