@@ -1,4 +1,4 @@
-#include <kilolib.h>
+#include <kilombo.h>
 
 ////////////////////////////////////////////////////////////////////////
 // SETUP
@@ -113,6 +113,10 @@ void loop() {
 
 int main() {
     kilo_init();
+    
+    SET_CALLBACK(botinfo, botinfo);
+    SET_CALLBACK(reset, setup);
+
     kilo_start(setup, loop);
     return 0;
 }
