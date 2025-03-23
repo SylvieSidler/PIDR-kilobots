@@ -9,18 +9,19 @@ def show_circles_on_img(coord, image_array):
         coord = np.round(coord[0,:]).astype("int") 
         for (x,y,r) in coord:
             cv2.circle(output, (x,y), r, (0,255,0),4)
-            cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
+            #cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
         height,width= image_array.shape[:2]
         scale = 0.5
         smol_img = cv2.resize(output, (int(width*scale), int(height*scale)))    
-        cv2.imshow("output", smol_img)
+        #cv2.imshow("output", smol_img)
+        cv2.imshow("output", output)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     else:
         print("no circles detected")
         
 
-def return_coordinates(image_array):
+def return_coordinates(image_array, dp1,minDist1, param11, param21, minRadius1, maxRadius1):
     output = image_array.copy()
     grayimg = cv2.cvtColor(image_array,cv2.COLOR_BGR2GRAY)
     gimgblur = cv2.GaussianBlur(grayimg,(7,7), 0)
@@ -32,7 +33,7 @@ def return_coordinates(image_array):
     #cv2.rectangle(mask,(rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), (255), thickness=-1)
     #masked_img= cv2.bitwise_and(gimgblur,gimgblur,mask=mask)
 
-    detected_circles = cv2.HoughCircles(gimgblur,cv2.HOUGH_GRADIENT,dp =3,minDist=50, param1=80, param2=85, minRadius=20, maxRadius=40)
+    detected_circles = cv2.HoughCircles(gimgblur,cv2.HOUGH_GRADIENT,dp=dp1,minDist=minDist1, param1=param11, param2=param21, minRadius=minRadius1, maxRadius=maxRadius1)
     if detected_circles is not None: 
         return [detected_circles,image_array]
     else:
