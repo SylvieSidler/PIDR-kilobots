@@ -4,10 +4,20 @@
 # configured below, these needs to be adapted to the system.
 
 #list of c files in this project
-SOURCES=blink.c
+SOURCES=naming.c
+#SOURCES=blink.c
+#SOURCES=move.c
+#SOURCES=move_simple.c
+#SOURCES=recieve.c
+#SOURCES=sent.c
 
 #name of the executable file
-EXECUTABLE=blink
+EXECUTABLE=naming
+#EXECUTABLE=blink
+#EXECUTABLE=move
+#EXECUTABLE=move_simple
+#EXECUTABLE=recieve
+#EXECUTABLE=sent
 
 # Path to the official kilolib, used for real bots only
 # Set it here, or as an environment variable in the shell:
