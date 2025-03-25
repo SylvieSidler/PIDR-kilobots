@@ -57,8 +57,8 @@ void message_tx_success() {
 }
 
 void setup() {
-    transmit_msg.type = NORMAL;
-    transmit_msg.crc = message_crc(&mydata->transmit_msg);
+    mydata->transmit_msg.type = NORMAL;
+    mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
     mydata->message_sent = 0;
 }
 
