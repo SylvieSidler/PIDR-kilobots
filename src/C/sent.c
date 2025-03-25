@@ -1,24 +1,70 @@
-#include <kilolib.h>
+#include <kilombo.h>
 
-message_t transmit_msg;
-uint8_t message_sent = 0;
+
+////////////////////////////////////////////////////////////////////////
+// SETUP
+
+// declare motion variable type
+typedef enum {
+    STOP,
+    FORWARD,
+    LEFT,
+    RIGHT
+} motion_t;
+
+// declare variables
+typedef struct {
+    uint32_t last_update;
+    int N_Neighbors; 
+    message_t transmit_msg;
+    uint8_t message_sent;
+} USERDATA;
+
+extern USERDATA *mydata;
+
+extern char* (*callback_botinfo) (void);
+char *botinfo(void);
+
+#ifdef SIMULATOR /////////
+
+#include <stdio.h>    // for printf
+int UserdataSize = sizeof(USERDATA);
+USERDATA *mydata;
+
+static char botinfo_buffer[10000];
+char *botinfo(void) {
+    int n;
+    char *p = botinfo_buffer;
+    n = sprintf (p, "ID: %d ", kilo_uid);
+    p += n;
+
+    return botinfo_buffer;
+}
+
+#endif ///////////////////
+
+
+////////////////////////////////////////////////////////////////////////
+// CODE 
+
 
 
 message_t *message_tx() {
-    return &transmit_msg;
+    return &mydata->transmit_msg;
 } 
 void message_tx_success() {
-    message_sent = 1;
+    mydata->message_sent = 1;
 }
 
 void setup() {
     transmit_msg.type = NORMAL;
-    transmit_msg.crc = message_crc(&transmit_msg);
+    transmit_msg.crc = message_crc(&mydata->transmit_msg);
+    mydata->message_sent = 0;
 }
 
 void loop() {
-    if (message_sent) {
-        message_sent = 0;
+    if (mydata->message_sent) {
+        mydata->message_sent = 0;
         set_color(RGB(1,1,1));
         delay(20);
         set_color(RGB(0,0,0));
