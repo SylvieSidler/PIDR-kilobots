@@ -9,7 +9,7 @@ def show_circles_on_img(coord, image_array):
         coord = np.round(coord[0,:]).astype("int") 
         for (x,y,r) in coord:
             cv2.circle(output, (x,y), r, (0,255,0),4)
-            #cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
+            cv2.rectangle(output,(x-5,y-5),(x+5,y+5),(0,255,255),-1)
         height,width= image_array.shape[:2]
         scale = 0.5
         smol_img = cv2.resize(output, (int(width*scale), int(height*scale)))    

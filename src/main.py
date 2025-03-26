@@ -23,8 +23,8 @@ def getImage(mode):
 
 
 def detectCircles(mode,dp,minDist, param1, param2, minRadius, maxRadius):
-    #img = getImage(mode)
-    img = cv2.imread("pidr-24-25-kilobots/Photos/photos_800x600/Photo_le_06-03-2025_à_17.31__3.jpg")
+    img = getImage(mode)
+    #img = cv2.imread("pidr-24-25-kilobots/Photos/photos_800x600/Photo_le_06-03-2025_à_17.31__3.jpg")
     return return_coordinates(img,dp,minDist, param1, param2, minRadius, maxRadius)
 
 
@@ -35,9 +35,9 @@ def showCircles(mode,dp,minDist, param1, param2, minRadius, maxRadius):
 if __name__=="__main__":
     #mode = "mode1"
     #mode = "mode2"
-    mode = "mode3"
+    #mode = "mode3"
     #mode = "mode4"
-    #mode = "mode5"
+    mode = "mode5"
     #cv2.imshow("image", getImage())
     if mode == "mode1":
         showCircles(mode,3.5,20,25,30,4,7) #AMELIORER
