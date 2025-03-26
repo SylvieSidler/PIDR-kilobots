@@ -67,7 +67,7 @@ void loop() { ////////////////// LOOP
     if (mydata->message_sent) {
         mydata->message_sent = 0;
         set_color(RGB(1,1,1));
-        mydata->last_update = 0;
+        mydata->last_update = kilo_ticks;
     }
     if (kilo_ticks > mydata->last_update + 32) { // attend 1 sec avant d'éteindre la led
         set_color(RGB(0,0,0));
