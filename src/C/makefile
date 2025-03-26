@@ -10,6 +10,7 @@ SOURCES=naming.c
 #SOURCES=move_simple.c
 #SOURCES=recieve.c
 #SOURCES=sent.c
+#SOURCES=send_receive.c
 
 #name of the executable file
 EXECUTABLE=naming
@@ -18,6 +19,7 @@ EXECUTABLE=naming
 #EXECUTABLE=move_simple
 #EXECUTABLE=recieve
 #EXECUTABLE=sent
+#EXECUTABLE=send_receive
 
 # Path to the official kilolib, used for real bots only
 # Set it here, or as an environment variable in the shell:
