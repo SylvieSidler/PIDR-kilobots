@@ -1,4 +1,7 @@
 import sys, time, math
+import requests
+import pickle
+import json
 from  collections import deque
 
 import numpy as np
@@ -60,18 +63,20 @@ if __name__ == "__main__" :
     #print(cv.getBuildInformation())
     
     # Create a VideoCapture object
-    cap = cv.VideoCapture(2)
-    
+    #cap = cv.VideoCapture(2)
+    r = requests.get("http://localhost:5001/start")
+    r = requests.get("http://localhost:5001/set_resolution/mode3")
+    r = requests.get("http://localhost:5001/set_camera/2")
     # Check if camera opened successfully
-    if cap.isOpened() == False : 
-        print ("Unable to read camera feed" )
-        sys.exit(0)
+    #if cap.isOpened() == False : 
+    #    print ("Unable to read camera feed" )
+    #    sys.exit(0)
 
     #width = cap.get(cv.CAP_PROP_FRAME_WIDTH)
     #height= cap.get(cv.CAP_PROP_FRAME_HEIGHT)
 
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, 800)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
+    #ap.set(cv.CAP_PROP_FRAME_WIDTH, 800)
+    #ap.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
     
     width = 800
     height = 600
@@ -81,11 +86,11 @@ if __name__ == "__main__" :
     # 
     diag = math.sqrt(width**2 + height**2) # image diagonal
     dist = int(.9 * diag) # distance between 2 hugh circles
-    min_rad = int(width / 20)  # min and max of considered circles 
-    max_rad = int(min_rad * 8 )
+    min_rad = 3 #int(width / 20)  # min and max of considered circles 
+    max_rad = 15 #int(min_rad * 8 )
     dmax = 10 # min distance between 2 circles
-    hough_param_1 = 70 # see https://docs.opencv.org/4.5.1/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
-    hough_param_2 = 50
+    hough_param_1 = 16 # see https://docs.opencv.org/4.5.1/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
+    hough_param_2 = 32
 
     #
     # create a window
@@ -127,27 +132,31 @@ if __name__ == "__main__" :
         counter += 1 
 
         # read a frame 
-        ret, frame = cap.read()
-        if ret != True:
-            continue # if could not,  skip 
+        #ret, frame = cap.read()
+        #if ret != True:
+        #    continue # if could not,  skip 
    
+        r = requests.get("http://localhost:5001/capture_image")
+        decodedjson = r.json()
+        frame = pickle.loads(json.loads(decodedjson).encode('latin-1'))
         output = frame.copy()
-
+        
         #
         # Preprocessing 
         #
         #
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        gray = cv.GaussianBlur(gray, (5, 5), 0)
-        gray = cv.medianBlur(gray,5)
-        gray = cv.adaptiveThreshold(gray, 255,\
-                                    cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
-                                    cv.THRESH_BINARY, 11, 3.5)
+        gray = cv.GaussianBlur(gray, (7, 7), 0)
+        #gray = cv.medianBlur(gray,3)
+        #gray = cv.adaptiveThreshold(gray, 255,\
+         #                           cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
+         #                           cv.THRESH_BINARY, 11, 3.5)
 	
         
-        gray = cv.erode(gray, kernel, iterations=1)
-        gray = cv.dilate(gray, kernel, iterations=1)
         
+        #gray = cv.dilate(gray, kernel, iterations=1)
+        #gray = cv.erode(gray, kernel, iterations=1)
+        rows = gray.shape[0]
         #
         # hough
         #
@@ -170,9 +179,10 @@ if __name__ == "__main__" :
                              apertureSize=3,
                              L2gradient=True)
             # detect
-            circles_det = cv.HoughCircles(gray, cv.HOUGH_GRADIENT,
-                                          2,
-                                          dist,
+            circles_det = cv.HoughCircles(gray, 
+                                          cv.HOUGH_GRADIENT,
+                                          3,
+                                          10,
                                           param1=hough_param_1,
                                           param2=hough_param_2,
                                           minRadius=min_rad,
@@ -193,8 +203,19 @@ if __name__ == "__main__" :
         # draw the detected circle and edges 
         #
         if circles_det is not None:
-            for c in circles_det :
-                drawer(output,  c)
+            #print(f"detected {len(circles_det)}")
+            #for c in circles_det :
+            #    drawer(output,  c)
+
+            circles = np.uint16(np.around(circles_det))
+            for i in circles[0, :]:
+                center = (i[0], i[1])
+                # circle center
+                cv.circle(output, center, 1, (0, 100, 100), 1)
+                # circle outline
+                radius = i[2]
+                cv.circle(output, center, radius, (0, 255, 0), 2)
+
 
         if edges is not None :
             output[edges != 0] = (0, 0, 255)
@@ -215,7 +236,8 @@ if __name__ == "__main__" :
             break
         
     # When everything done, release the video capture and video write objects
-    cap.release()
+    #cap.release()
  
     # Closes all the frames
     cv.destroyAllWindows() 
+    r = requests.get("http://localhost:5001/stop")
