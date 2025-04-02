@@ -451,15 +451,17 @@ void loop() {
     } } else {set_motors(0,0);}
 
     // If TS sec has passed, try to become a speaker
-    if (kilo_ticks > last_changed + TS*SEC && iter < MAXT) {
+    if (kilo_ticks > last_changed + TS*SEC && iter < MAXT) { // 8 sec depuis dernier changement && avant avoir fait 500 itérations 
         last_changed = kilo_ticks;
         uint8_t rand_int = rand_soft();
-        if (rand_int <= (255*PS)/100) {
+        printf("rand : %d\n",rand_int);
+        if (rand_int <= (255*PS)/100) { // 20% de chance de devenir speaker
             state1 = SPEAKER;
             send_message_speaker();
         } else {
             state1 = HEARER;
         }
+        printf("I am %d, I am %d\n",kilo_uid,state1);
         speaker_encountered = 0;
         uint8_t words_used = 0;
         uint16_t word_value = 0;
