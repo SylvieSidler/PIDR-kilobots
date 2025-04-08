@@ -140,25 +140,71 @@ if __name__ == "__main__":
         # Affichage des cercles détectés
         if circles_det is not None:
             circles = np.uint16(np.around(circles_det))
-            # Trier les cercles dans l’ordre de lecture (haut → bas, gauche → droite)
             sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
 
+            # Calcul automatique de l’échelle à partir des diamètres
+            diameters_px = [2 * i[2] for i in sorted_circles]
+            mean_diameter_px = np.mean(diameters_px)
+            pixels_per_cm = mean_diameter_px / 3.3  # ← basé sur ton diamètre réel en cm
+
+            # Rayon de 7 cm converti en pixels
+            extra_radius_px = int(round(7 * pixels_per_cm))
+
+            centers_px = []
+            centers_cm = []
+
             for idx, i in enumerate(sorted_circles):
-                center = (i[0], i[1])
-                radius = i[2]
-                # Dessiner le centre
-                cv.circle(output, center, 1, (0, 100, 100), 1)
-                # Dessiner le cercle
-                cv.circle(output, center, radius, (0, 255, 0), 2)
-                # Écrire l’identifiant du cercle à côté du centre
-                cv.putText(output,
-                        f"{idx+1}",
-                        (center[0] + 10, center[1] - 10),  # décalé pour lisibilité
-                        cv.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (0, 0, 0),
-                        1,
-                        cv.LINE_AA)
+                x_px, y_px, r_px = i
+                centers_px.append((x_px, y_px))
+
+                # Conversion en cm avec origine en haut à gauche
+                x_cm = x_px / pixels_per_cm
+                y_cm = y_px / pixels_per_cm
+                centers_cm.append((x_cm, y_cm))
+
+                # Cercle d'origine
+                cv.circle(output, (x_px, y_px), 1, (0, 100, 100), 1)
+                cv.circle(output, (x_px, y_px), r_px, (0, 255, 0), 2)
+                cv.putText(output, f"{idx+1}", (x_px + 10, y_px - 10),
+                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+
+                # Cercle supplémentaire de 7 cm (en bleu)
+                cv.circle(output, (x_px, y_px), extra_radius_px, (255, 0, 0), 2)
+
+            # Afficher l’échelle utilisée
+            cv.putText(output, f"1 cm = {pixels_per_cm:.2f} px", (20, output.shape[0] - 20),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+
+            # Affichage des coordonnées converties
+            panel_height = min(200, 30 * len(centers_cm) + 10)
+            overlay = output.copy()
+            cv.rectangle(overlay, (10, 10), (280, 10 + panel_height), (0, 0, 0), -1)
+            cv.addWeighted(overlay, 0.6, output, 0.4, 0, output)
+
+            for idx, (x_cm, y_cm) in enumerate(centers_cm):
+                text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
+                cv.putText(output, text, (20, 35 + idx * 20),
+                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+
+            # Liaisons : créer des lignes rouges entre kilobits pouvant communiquer
+            for i in range(len(centers_cm)):
+                for j in range(i + 1, len(centers_cm)):
+                    x1_cm, y1_cm = centers_cm[i]
+                    x2_cm, y2_cm = centers_cm[j]
+
+                    # Distance entre centres en cm
+                    dist_cm = math.hypot(x2_cm - x1_cm, y2_cm - y1_cm)
+
+                    # Rayon réel des cercles en cm (dérivé de leur rayon pixels)
+                    r1_cm = sorted_circles[i][2] / pixels_per_cm
+                    r2_cm = sorted_circles[j][2] / pixels_per_cm
+
+                    # Si les zones de com se recoupent
+                    if dist_cm <= 7 + r2_cm or dist_cm <= 7 + r1_cm:
+                        # Dessiner une ligne rouge entre les centres
+                        cv.line(output, centers_px[i], centers_px[j], (0, 0, 255), 2)
+
+
 
         # Affichage des contours (optionnel, pour visualisation)
         if edges is not None:
