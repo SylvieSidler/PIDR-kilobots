@@ -131,7 +131,7 @@ if __name__ == "__main__":
             circles_det = cv.HoughCircles(gray,
                                           cv.HOUGH_GRADIENT,
                                           3,
-                                          10,
+                                          20,
                                           param1=hough_param_1,
                                           param2=hough_param_2,
                                           minRadius=min_rad,
@@ -175,17 +175,6 @@ if __name__ == "__main__":
             cv.putText(output, f"1 cm = {pixels_per_cm:.2f} px", (20, output.shape[0] - 20),
                     cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
 
-            # Affichage des coordonnées converties
-            panel_height = min(200, 30 * len(centers_cm) + 10)
-            overlay = output.copy()
-            cv.rectangle(overlay, (10, 10), (280, 10 + panel_height), (0, 0, 0), -1)
-            cv.addWeighted(overlay, 0.6, output, 0.4, 0, output)
-
-            for idx, (x_cm, y_cm) in enumerate(centers_cm):
-                text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
-                cv.putText(output, text, (20, 35 + idx * 20),
-                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
-
             # Liaisons : créer des lignes rouges entre kilobits pouvant communiquer
             for i in range(len(centers_cm)):
                 for j in range(i + 1, len(centers_cm)):
@@ -204,8 +193,6 @@ if __name__ == "__main__":
                         # Dessiner une ligne rouge entre les centres
                         cv.line(output, centers_px[i], centers_px[j], (0, 0, 255), 2)
 
-
-
         # Affichage des contours (optionnel, pour visualisation)
         if edges is not None:
             output[edges != 0] = (0, 0, 255)
@@ -216,8 +203,52 @@ if __name__ == "__main__":
         drawer(output, min_circle, (255, 0, 255), 1, False)
         drawer(output, max_circle, (255, 0, 255), 1, False)
 
+        # === Quadrillage tous les 5 cm et 10 cm avec coordonnées ===
+        if 'pixels_per_cm' in locals() and pixels_per_cm > 0:
+            spacing_5cm = int(round(5 * pixels_per_cm))
+            spacing_10cm = int(round(10 * pixels_per_cm))
+            height, width = output.shape[:2]
+
+            for x in range(0, width, spacing_5cm):
+                thickness = 1 if x % spacing_10cm != 0 else 2
+                color = (50, 50, 50) if thickness == 1 else (100, 100, 100)
+                cv.line(output, (x, 0), (x, height), color, thickness)
+
+                if x % spacing_10cm == 0:
+                    x_cm = x / pixels_per_cm
+                    if x_cm == 0 :
+                        cv.putText(output, f"{int(x_cm)}", (x + 2, 15),
+                                cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
+                    else :
+                        cv.putText(output, f"{int(x_cm+1)}", (x + 2, 15),
+                                cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
+
+            for y in range(0, height, spacing_5cm):
+                thickness = 1 if y % spacing_10cm != 0 else 2
+                color = (50, 50, 50) if thickness == 1 else (100, 100, 100)
+                cv.line(output, (0, y), (width, y), color, thickness)
+
+                if y % spacing_10cm == 0:
+                    y_cm = y / pixels_per_cm
+                    cv.putText(output, f"{int(y_cm+1)}", (5, y - 2),
+                            cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
+        
+        # Affichage des coordonnées converties (panneau en bas à droite)
+        panel_width = 270
+        panel_height = min(200, 20 * len(centers_cm) + 10)
+        x0 = output.shape[1] - panel_width - 20
+        y0 = output.shape[0] - panel_height - 20
+
+        overlay = output.copy()
+        cv.rectangle(overlay, (x0, y0), (x0 + panel_width + 10, y0 + panel_height + 10), (0, 0, 0), -1)
+        cv.addWeighted(overlay, 0.6, output, 0.4, 0, output)
+
+        for idx, (x_cm, y_cm) in enumerate(centers_cm):
+            text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
+            cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+
         # Affichage du FPS en haut à gauche
-        writer(output, "Fps={:06.2f}".format(fps()))
         cv.imshow('frame', output)
 
         # Quitter la boucle si touche "q" pressée
