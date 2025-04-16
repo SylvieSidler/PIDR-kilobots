@@ -1,118 +1,142 @@
+
 #include <kilombo.h>
+#include "test.h"
+#ifdef SIMULATOR
+#include <stdio.h> // for printf
+#else
+#include <avr/io.h>  // for microcontroller register defs
+//  #define DEBUG          // for printf to serial port
+//  #include "debug.h"
+#endif
 
-uint8_t new_message = 0;
-#define num_bots 2
-#define com_radius 5
-uint16_t dist;
-////////////////////////////////////////////////////////////////////////
-// SETUP
-
-// declare motion variable type
-typedef enum {
-    STOP,
-    FORWARD,
-    LEFT,
-    RIGHT
-} motion_t;
-
-// declare variables
-typedef struct {
+typedef struct 
+{
+    uint8_t state;
     uint32_t last_update;
-    int N_Neighbors; 
+    enum state stateLH;
     message_t transmit_msg;
-    uint8_t message_sent;
-    uint8_t communicated_with[num_bots];
+    message_t rvd_message;
+
 } USERDATA;
 
-extern USERDATA *mydata;
+int message_sent = 0;
+int new_message=0;
+message_t received_message;
 
-extern char* (*callback_botinfo) (void);
-char *botinfo(void);
+REGISTER_USERDATA(USERDATA)
 
-#ifdef SIMULATOR /////////
 
-#include <stdio.h>    // for printf
-int UserdataSize = sizeof(USERDATA);
-USERDATA *mydata;
 
-static char botinfo_buffer[10000];
-char *botinfo(void) {
-    int n;
-    char *p = botinfo_buffer;
-    n = sprintf (p, "ID: %d ", kilo_uid);
-    p += n;
+message_t transmit_msg;
 
-    return botinfo_buffer;
+message_t *message_tx(){
+    //printf("%d,%d \n",kilo_uid, mydata->stateLH);
+    if (mydata->stateLH == SPEAKER){
+        mydata->transmit_msg= transmit_msg;
+        return &transmit_msg;
+    }
+    else{
+        //printf("return: %d,%d \n",kilo_uid, mydata->stateLH);
+        return NULL;
+    }
 }
 
-#endif ///////////////////
-
-
-////////////////////////////////////////////////////////////////////////
-// CODE 
-
-
-
-message_t *message_tx() {
-    return &mydata->transmit_msg;
-} 
-void message_tx_success() {
-    mydata->message_sent = 1;
+void message_tx_success(){
+    message_sent=1;
+    printf("ici!\n");
 }
 
-void message_rx(message_t *m, distance_measurement_t *d) {
-    
+void message_rx(message_t *msg, distance_measurement_t *dist){
+    received_message = *msg;
+    mydata->rvd_message=received_message;
+    if (mydata->stateLH==LISTENER && received_message.data[0]==0 && received_message.data[1]==1 ){
+        new_message = 1;
+        printf("here!\n");
+    }
 }
+void setup_message(){
+    transmit_msg.type= NORMAL;
+    transmit_msg.data[0]=0;
+    transmit_msg.data[1]=1;
+    transmit_msg.crc =message_crc(&transmit_msg);
+    mydata->transmit_msg = transmit_msg;
 
+}
 void setup() {
-    mydata->transmit_msg.type = NORMAL;
-    mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
-    mydata->message_sent = 0;
-    mydata->last_update = kilo_ticks; // init timer
-    mydata->N_Neighbors = 0;
-    for (int i = 0; i < num_bots; i++) {
-        mydata->communicated_with[i] = 0;
+    setup_message();
+    // Put any setup code here. This is run once before entering the loop.
+    mydata->state = 0;
+    int16_t id = kilo_uid;
+    //printf("%d\n",id);
+    //printf("%d\n",id%2);
+    if (id%2==0){
+        mydata->stateLH = LISTENER;
+        set_color(RGB(3,0,0));
+        //printf("here\n");
     }
-}
-
-void loop() { ////////////////// LOOP
-    if (mydata->message_sent) {
-        mydata->message_sent = 0;
-        set_color(RGB(1,1,0));
-        mydata->last_update = 0;
-    }
-
-    ///robots pairs vs robots impairs ecouteur envoyeurs
-    if (new_message) {
-        new_message = 0;
-        set_color(RGB(1,0,0));
-        mydata->last_update = 0;
+    else{
+        //mydata->stateLH = RIEN;
+        mydata->stateLH = SPEAKER;
+        set_color(RGB(0,0,3));
+        printf("003,state:%d\n",mydata->stateLH);
     }
     
-    if (kilo_ticks > mydata->last_update + 32) { // attend 1 sec avant d'éteindre la led
-        set_color(RGB(0,0,0));
-    }
-    for (int i = 0; i <num_bots; i++) {
-        if (mydata->communicated_with[i] == 0) {  // Check if this neighbor has already communicated
-            if (dist < com_radius) {// Send message only if the bot is within communication radius
-                mydata->transmit_msg.data[0] = kilo_uid;  // Include our bot ID in the message
-                mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);  // Update the CRC
-                kilo_message_tx();  // Send the message
-                mydata->message_sent = 1;  // Mark message as sent
-                mydata->last_update = kilo_ticks;  // Reset timer
-                printf("Message sent to bot %d\n", i);
-             }
+}
+
+
+void loop() {
+    switch(mydata->stateLH){
+        case SPEAKER:
+            if (message_sent == 1){
+                mydata->last_update = kilo_ticks;
+                message_sent=0;
+                //printf("message sent!\n");
+                set_color(RGB(1,0,1));
+                if (kilo_ticks > mydata->last_update + 62) {
+                    set_color(RGB(0,0,3));
+                }
             }
-        }
-    }
+            else{
+                set_color(RGB(0,0,3));
+            }
+            break;
+        case LISTENER:
+            if (new_message == 1){
+                mydata->last_update = kilo_ticks;
+                new_message=0;
+                //printf("message received\n");
+                set_color(RGB(1,1,0));
+                if (kilo_ticks > mydata->last_update + 62) {
+                    set_color(RGB(3,0,0));
+                }
+            }
+            else{
+                set_color(RGB(3,0,0));
+            }
+            break;
+        case RIEN:
+            set_color(RGB(0,3,0));
+            //printf("je suis censé passer ici et pas au dessus\n");
+    } 
+    mydata->last_update = kilo_ticks;
+    // Put the main code here. This is run repeatedly.
+//#ifdef SIMULATOR
+//    printf("%d tick %d\n", kilo_uid, kilo_ticks) ;
+//#endif   
+}
+    
+  
 
 
-
-int main() {
+int main()
+{
+    // Initialize the hardware.
     kilo_init();
-    kilo_message_tx = message_tx;
+    kilo_message_tx=message_tx;
     kilo_message_tx_success = message_tx_success;
-    kilo_message_rx = message_rx;
+    kilo_message_rx=message_rx;
+    // Register the program.
     kilo_start(setup, loop);
+    
     return 0;
 }

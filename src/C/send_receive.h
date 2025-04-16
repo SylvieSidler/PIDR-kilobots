@@ -1,4 +1,5 @@
 enum state{
     LISTENER,
-    SPEAKER
+    SPEAKER,
+    RIEN
 };
