@@ -22,18 +22,19 @@ typedef struct
 int message_sent = 0;
 int new_message=0;
 message_t received_message;
+message_t globtransmit_msg;
 
 REGISTER_USERDATA(USERDATA)
 
 
 
-message_t transmit_msg;
+
 
 message_t *message_tx(){
     //printf("%d,%d \n",kilo_uid, mydata->stateLH);
     if (mydata->stateLH == SPEAKER){
-        mydata->transmit_msg= transmit_msg;
-        return &transmit_msg;
+        mydata->transmit_msg= globtransmit_msg;
+        return &globtransmit_msg;
     }
     else{
         //printf("return: %d,%d \n",kilo_uid, mydata->stateLH);
@@ -55,15 +56,14 @@ void message_rx(message_t *msg, distance_measurement_t *dist){
     }
 }
 void setup_message(){
-    transmit_msg.type= NORMAL;
-    transmit_msg.data[0]=0;
-    transmit_msg.data[1]=1;
-    transmit_msg.crc =message_crc(&transmit_msg);
-    mydata->transmit_msg = transmit_msg;
+    globtransmit_msg.type= NORMAL;
+    globtransmit_msg.data[0]=0;
+    globtransmit_msg.data[1]=1;
+    globtransmit_msg.crc =message_crc(&globtransmit_msg);
+    mydata->transmit_msg = globtransmit_msg;
 
 }
 void setup() {
-    setup_message();
     // Put any setup code here. This is run once before entering the loop.
     mydata->state = 0;
     int16_t id = kilo_uid;
@@ -78,8 +78,9 @@ void setup() {
         //mydata->stateLH = RIEN;
         mydata->stateLH = SPEAKER;
         set_color(RGB(0,0,3));
-        printf("003,state:%d\n",mydata->stateLH);
+        //printf("003,state:%d\n",mydata->stateLH);
     }
+    setup_message();
     
 }
 
