@@ -16,11 +16,13 @@ typedef struct
     enum state stateLH;
     message_t transmit_msg;
     message_t rvd_message;
+    int new_message;
+    int message_sent;
 
 } USERDATA;
 
-int message_sent = 0;
-int new_message=0;
+
+
 message_t received_message;
 message_t globtransmit_msg;
 
@@ -43,16 +45,16 @@ message_t *message_tx(){
 }
 
 void message_tx_success(){
-    message_sent=1;
-    printf("ici!\n");
+    mydata->message_sent=1;
+    //printf("ici!\n");
 }
 
 void message_rx(message_t *msg, distance_measurement_t *dist){
     received_message = *msg;
     mydata->rvd_message=received_message;
     if (mydata->stateLH==LISTENER && received_message.data[0]==0 && received_message.data[1]==1 ){
-        new_message = 1;
-        printf("here!\n");
+        mydata->new_message = 1;
+        //printf("here!\n");
     }
 }
 void setup_message(){
@@ -80,6 +82,8 @@ void setup() {
         set_color(RGB(0,0,3));
         //printf("003,state:%d\n",mydata->stateLH);
     }
+    mydata->new_message =0;
+    mydata->message_sent=0;
     setup_message();
     
 }
@@ -88,12 +92,12 @@ void setup() {
 void loop() {
     switch(mydata->stateLH){
         case SPEAKER:
-            if (message_sent == 1){
+            if (mydata->message_sent == 1){
                 mydata->last_update = kilo_ticks;
-                message_sent=0;
+                mydata->message_sent=0;
                 //printf("message sent!\n");
                 set_color(RGB(1,0,1));
-                if (kilo_ticks > mydata->last_update + 62) {
+                if (kilo_ticks > mydata->last_update + 124) {
                     set_color(RGB(0,0,3));
                 }
             }
@@ -102,12 +106,12 @@ void loop() {
             }
             break;
         case LISTENER:
-            if (new_message == 1){
+            if (mydata->new_message == 1){
                 mydata->last_update = kilo_ticks;
-                new_message=0;
+                mydata->new_message=0;
                 //printf("message received\n");
                 set_color(RGB(1,1,0));
-                if (kilo_ticks > mydata->last_update + 62) {
+                if (kilo_ticks > mydata->last_update + 124) {
                     set_color(RGB(3,0,0));
                 }
             }
