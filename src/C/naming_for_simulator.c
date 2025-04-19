@@ -3,6 +3,7 @@
 #include "naming_for_simulator.h"
 #ifdef SIMULATOR
 #include <stdio.h> // for printf
+#include <stdint.h>
 #else
 #include <avr/io.h>  // for microcontroller register defs
 //  #define DEBUG          // for printf to serial port
@@ -115,6 +116,29 @@ void generate_new_link_ow(uint8_t object, uint8_t word){
 void generate_new_link_o(uint8_t object) {
     uint8_t new_word = generate_word();
     generate_new_link_ow(object,new_word);
+}
+
+uint8_t handle_message_as_hearer(uint8_t object, uint8_t word) {
+    if (obj_known(object) == 0) {
+        mydata->objects[object] = 1;
+        if (word_known(word)==1) {
+            generate_new_link_o(object);
+        } else {
+            mydata->words[word] = 1;
+            generate_new_link_ow(object,word);
+        }
+    } else if (link_word_obj_exists(object, word)) {
+        remove_link(object,word);
+        return 1;
+    } else {
+        if (word_known(word)==1) {
+            generate_new_link_o(object);
+        } else {
+            mydata->words[word] = 1;
+            generate_new_link_ow(object,word);
+        }
+    }
+    return 0;
 }
 
 message_t *message_tx(){
