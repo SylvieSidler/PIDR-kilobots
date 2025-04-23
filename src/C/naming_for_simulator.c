@@ -141,10 +141,63 @@ uint8_t handle_message_as_hearer(uint8_t object, uint8_t word) {
     return 0;
 }
 
+void handle_message_object(uint8_t object) {
+    if (obj_known(object) == 0) {
+        mydata->objects[object] = 1;
+        generate_new_link_o(object);
+    }
+}
+
+void reset_msg_sent() {
+    for (int i =0 ; i<9; i++) {
+        globtransmit_msg.data[i] = 0;
+    }
+}
+
+void send_message_speaker() {
+    uint8_t rand_int = rand_soft();
+    uint8_t associations_list[Nb_diff_obj*Nb_max_diff_words_for_objs];
+    uint8_t count = 0;
+    uint8_t chosen_object;
+    uint8_t chosen_word;
+    // Get id of all active associations
+    for (int i = 0; i<Nb_diff_obj*Nb_diff_obj*Nb_max_diff_words_for_objs; i++) {
+        if (mydata->list_links_obj_word[i].link) {
+            associations_list[count] = i;
+            count++;
+            // if (kilo_uid == 20) {
+            //     fprintf(fptr,"B %d\n",memory[i].word_id);
+            // }
+        }
+    }
+    if (count > 0) {
+        rand_int = rand_int % count;
+        chosen_object= mydata->list_links_obj_word[associations_list[rand_int]].object;
+        chosen_word = mydata->list_links_obj_word[associations_list[rand_int]].word;
+        //mydata->transmit_message.type=NORMAL;
+        globtransmit_msg.type =NORMAL;
+        reset_msg_sent();
+        //mydata->transmit_message.data[0] = chosen_object;
+        //mydata->transmit_message.data[1] = chosen_word;
+        //mydata->transmit_message.data[2] = kilo_uid%255; 
+        //mydata->transmit_message.data[3] = mydata->stateLH;
+        //mydata->transmit_message.data[4] = 1;
+        //mydata->transmit_message.crc = message_crc(&mydata->message_sent);
+        globtransmit_msg.data[0] = chosen_object;
+        globtransmit_msg.data[1]=chosen_word;
+        globtransmit_msg.data[2]=kilo_uid%255;
+        globtransmit_msg.data[3]=mydata->stateLH;
+        globtransmit_msg.data[4]=1;
+        globtransmit_msg.crc=message_crc(&globtransmit_msg);
+        //msg_ptr = &msg_sent;
+
+    }
+}
+
 message_t *message_tx(){
     //printf("%d,%d \n",kilo_uid, mydata->stateLH);
     if (mydata->stateLH == SPEAKER){
-        mydata->transmit_msg= globtransmit_msg;
+        mydata->transmit_msg= message_sent;
         return &globtransmit_msg;
     }
     else{
@@ -152,6 +205,8 @@ message_t *message_tx(){
         return NULL;
     }
 }
+
+
 
 void message_tx_success(){
     mydata->message_sent=1;
