@@ -197,7 +197,7 @@ void send_message_speaker() {
 message_t *message_tx(){
     //printf("%d,%d \n",kilo_uid, mydata->stateLH);
     if (mydata->stateLH == SPEAKER){
-        mydata->transmit_msg= message_sent;
+        mydata->transmit_msg= globtransmit_msg;
         return &globtransmit_msg;
     }
     else{
@@ -216,44 +216,76 @@ void message_tx_success(){
 void message_rx(message_t *msg, distance_measurement_t *dist){
     received_message = *msg;
     mydata->rvd_message=received_message;
-    if (mydata->stateLH==LISTENER && received_message.data[0]==0 && received_message.data[1]==1 ){
+    if (mydata->stateLH==LISTENER && received_message.data[4]==1 ){
         mydata->new_message = 1;
-        //printf("here!\n");
+        printf("here!\n");
+    }
+    else{
+        //mydata->rvd_message = 0;
+        mydata->rvd_message.type = 127;
+        mydata->rvd_message.data[4] = 0;
+        mydata->rvd_message.crc = message_crc(&mydata->rvd_message);
     }
 }
-void setup_message(){
-    globtransmit_msg.type= NORMAL;
-    globtransmit_msg.data[0]=0;
-    globtransmit_msg.data[1]=1;
-    globtransmit_msg.crc =message_crc(&globtransmit_msg);
-    mydata->transmit_msg = globtransmit_msg;
 
+
+void initialize_kilobots() {
+    mydata->stateLH = LISTENER;
+    for(int i = 0; i<Nb_diff_obj; i++) {
+        mydata->objects[i] = 1;
+        for(int j = 0; j<Nb_max_diff_words_for_objs; j++) {
+            mydata->words[i*Nb_max_diff_words_for_objs+j] = 0;
+            for(int k = 0;k<Nb_diff_obj;k++) {
+                mydata->list_links_obj_word[i*Nb_max_diff_words_for_objs*Nb_diff_obj+j*Nb_diff_obj+k].link = 0;
+                mydata->list_links_obj_word[i*Nb_max_diff_words_for_objs*Nb_diff_obj+j*Nb_diff_obj+k].object = k;
+                mydata->list_links_obj_word[i*Nb_max_diff_words_for_objs*Nb_diff_obj+j*Nb_diff_obj+k].word= i*Nb_max_diff_words_for_objs+j;
+                
+            }      
+        }
+    }
+
+    for(int i = 0; i<Nb_diff_obj; i++) {
+        generate_new_link_o(i);
+    }
 }
+// void setup_message(){
+//     globtransmit_msg.type= NORMAL;
+//     globtransmit_msg.data[0]=0;
+//     globtransmit_msg.data[1]=1;
+//     globtransmit_msg.crc =message_crc(&globtransmit_msg);
+//     mydata->transmit_msg = globtransmit_msg;
+
+// }
 void setup() {
     // Put any setup code here. This is run once before entering the loop.
     mydata->state = 0;
-    int16_t id = kilo_uid;
-    //printf("%d\n",id);
-    //printf("%d\n",id%2);
-    if (id%2==0){
-        mydata->stateLH = LISTENER;
-        set_color(RGB(3,0,0));
-        //printf("here\n");
-    }
-    else{
-        //mydata->stateLH = RIEN;
-        mydata->stateLH = SPEAKER;
-        set_color(RGB(0,0,3));
-        //printf("003,state:%d\n",mydata->stateLH);
-    }
+    // int16_t id = kilo_uid;
+    // //printf("%d\n",id);
+    // //printf("%d\n",id%2);
+    // if (id%2==0){
+    //     mydata->stateLH = LISTENER;
+    //     set_color(RGB(3,0,0));
+    //     //printf("here\n");
+    // }
+    // else{
+    //     //mydata->stateLH = RIEN;
+    //     mydata->stateLH = SPEAKER;
+    //     set_color(RGB(0,0,3));
+    //     //printf("003,state:%d\n",mydata->stateLH);
+    // }
     mydata->new_message =0;
     mydata->message_sent=0;
-    setup_message();
+    initialize_kilobots();
+    mydata->colour = RGB(0,0,0);
+    set_color(mydata->colour);
+    rand_seed(kilo_uid%255);
+    //setup_message();
     
 }
 
 
 void loop() {
+    set_color(mydata->colour);
     switch(mydata->stateLH){
         case SPEAKER:
             if (mydata->message_sent == 1){
@@ -262,32 +294,101 @@ void loop() {
                 //printf("message sent!\n");
                 set_color(RGB(1,0,1));
                 if (kilo_ticks > mydata->last_update + 124) {
-                    set_color(RGB(0,0,3));
+                    set_color(mydata->colour);
                 }
             }
             else{
-                set_color(RGB(0,0,3));
+                set_color(mydata->colour);
             }
             break;
         case LISTENER:
             if (mydata->new_message == 1){
                 mydata->last_update = kilo_ticks;
                 mydata->new_message=0;
-                //printf("message received\n");
+                printf("message received %d\n", kilo_uid);
                 set_color(RGB(1,1,0));
+                uint8_t object_id = mydata->rvd_message.data[0];
+                uint8_t word_id = mydata->rvd_message.data[1];
+                if (mydata->rvd_message.data[3]) {
+                    handle_message_as_hearer(object_id, word_id); 
+                }
+                else {
+                    handle_message_object(object_id);
+                    //printf("%d received a message from %d (%d); o_id = %d, w_id = %d\n",recipient_id,sender_id, message_recvd.data[3],object_id,word_id);
+                }
                 if (kilo_ticks > mydata->last_update + 124) {
-                    set_color(RGB(3,0,0));
+                    set_color(mydata->colour);
+                    mydata->last_update = kilo_ticks;
+                    uint8_t rand_int = rand_soft();
+                    printf("randint %d\n", rand_int);
+                    if (rand_int <= (255*20)/100) {
+                        mydata->stateLH = SPEAKER;
+                        set_color(mydata->colour);
+                        printf("%d\n", kilo_uid);
+                        send_message_speaker();
+                    } else {
+                        mydata->stateLH = LISTENER;
+                        set_color(mydata->colour);
+                    }
+                    uint8_t words_used = 0;
+                    uint16_t word_value = 0;
+                    uint8_t state = 0;
+                    for (int k = 0; k < Nb_diff_obj*Nb_max_diff_words_for_objs; k++) {
+                        words_used += mydata->words[k];
+                        printf("words[k] %d, %d \n", mydata->words[k], kilo_uid);
+                        state = state || mydata->words[k];
+                        if (mydata->words[k]) {
+                            word_value += k;
+                        }
+                    }   
+        
+                    if (words_used == Nb_diff_obj) {
+                        mydata->colour = word_value%256;
+                    }
+                    else {
+                        mydata->colour = 0;
+                    }
                 }
             }
             else{
-                set_color(RGB(3,0,0));
+                mydata->last_update = kilo_ticks;
+                    uint8_t rand_int = rand_soft();
+                    printf("randint %d\n", rand_int);
+                    if (rand_int <= (255*20)/100) {
+                        mydata->stateLH = SPEAKER;
+                        set_color(mydata->colour);
+                        printf("%d\n", kilo_uid);
+                        send_message_speaker();
+                    } else {
+                        mydata->stateLH = LISTENER;
+                        set_color(mydata->colour);
+                    }
+                    uint8_t words_used = 0;
+                    uint16_t word_value = 0;
+                    uint8_t state = 0;
+                    for (int k = 0; k < Nb_diff_obj*Nb_max_diff_words_for_objs; k++) {
+                        words_used += mydata->words[k];
+                        printf("words[k] %d, %d \n", mydata->words[k], kilo_uid);
+                        state = state || mydata->words[k];
+                        if (mydata->words[k]) {
+                            word_value += k;
+                        }
+                    }   
+        
+                    if (words_used == Nb_diff_obj) {
+                        mydata->colour = word_value%256;
+                    }
+                    else {
+                        mydata->colour = 0;
+                    }
+                set_color(mydata->colour);
             }
-            break;
+                break;
         case RIEN:
-            set_color(RGB(0,3,0));
+            set_color(mydata->colour);
+            break;
             //printf("je suis censé passer ici et pas au dessus\n");
-    } 
-    mydata->last_update = kilo_ticks;
+    }
     // Put the main code here. This is run repeatedly.
 //#ifdef SIMULATOR
 //    printf("%d tick %d\n", kilo_uid, kilo_ticks) ;
@@ -297,8 +398,7 @@ void loop() {
   
 
 
-int main()
-{
+int main(){
     // Initialize the hardware.
     kilo_init();
     kilo_message_tx=message_tx;
