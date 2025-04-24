@@ -8,7 +8,7 @@ import pickle
 def getImage(mode):
     r = requests.get("http://localhost:5001/start")
     r = requests.get("http://localhost:5001/set_resolution/mode3")
-    r = requests.get("http://localhost:5001/set_camera/2")
+    r = requests.get("http://localhost:5001/set_camera/0")
     r = requests.get("http://localhost:5001/capture_image")
     decodedjson = r.json()
     deserializedjson = pickle.loads(json.loads(decodedjson).encode('latin-1'))
@@ -45,7 +45,7 @@ if __name__=="__main__":
     elif mode == "mode2":
         showCircles(mode,3.25,15,70,70,12,16)
     elif mode == "mode3":
-        showCircles(mode,3,10,20,35,10,13)
+        showCircles(mode,3,10,20,35,38,39)
     elif mode == "mode4":
         showCircles(mode,3,20,60,85,20,25)
     elif mode == "mode5":
