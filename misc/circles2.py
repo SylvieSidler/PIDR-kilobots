@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # Configuration de la capture vidéo via serveur HTTP local
     r = requests.get("http://localhost:5001/start")
     r = requests.get("http://localhost:5001/set_resolution/mode3")
-    r = requests.get("http://localhost:5001/set_camera/0")
+    r = requests.get("http://localhost:5001/set_camera/2")
 
     width = 800
     height = 600
@@ -64,11 +64,12 @@ if __name__ == "__main__":
     # Paramètres de la transformée de Hough pour la détection de cercles
     diag = math.sqrt(width**2 + height**2)
     dist = int(.9 * diag)
-    min_rad = 38
-    max_rad = 39
+    min_rad = 20
+    max_rad = 40
     dmax = 10
     hough_param_1 = 20
     hough_param_2 = 35
+    
 
     # Création de la fenêtre et des sliders pour modifier les paramètres Hough
     cv.namedWindow('frame')
@@ -148,7 +149,7 @@ if __name__ == "__main__":
             pixels_per_cm = mean_diameter_px / 3.3  # ← basé sur ton diamètre réel en cm
 
             # Rayon de 7 cm converti en pixels
-            extra_radius_px = int(round(7 * pixels_per_cm))
+            extra_radius_px = int(round(3.5 * pixels_per_cm))
 
             centers_px = []
             centers_cm = []
@@ -189,7 +190,7 @@ if __name__ == "__main__":
                     r2_cm = sorted_circles[j][2] / pixels_per_cm
 
                     # Si les zones de com se recoupent
-                    if dist_cm <= 7 + r2_cm or dist_cm <= 7 + r1_cm:
+                    if dist_cm <= 3.5 + r2_cm or dist_cm <= 3.5 + r1_cm:
                         # Dessiner une ligne rouge entre les centres
                         cv.line(output, centers_px[i], centers_px[j], (0, 0, 255), 2)
 
