@@ -1,6 +1,6 @@
 
 #include <kilombo.h>
-#include "test.h"
+#include "send_receive.h"
 #ifdef SIMULATOR
 #include <stdio.h> // for printf
 #else
@@ -38,10 +38,7 @@ message_t *message_tx(){
         mydata->transmit_msg= globtransmit_msg;
         return &globtransmit_msg;
     }
-    else{
-        //printf("return: %d,%d \n",kilo_uid, mydata->stateLH);
-        return NULL;
-    }
+    return 0;
 }
 
 void message_tx_success(){
