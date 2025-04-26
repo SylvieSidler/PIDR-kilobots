@@ -3,6 +3,11 @@
 
 #include <kilombo.h>
 
+#define N 5 // size of globalWordList -> number of words in universe 
+
+uint8_t globalWordList[] = {0, 1, 2, 3, 4}; // list of words in universe
+uint8_t object = 7; // object to name
+
 // state of kilobot : LISTENER or SPEAKER
 enum state{
     LISTENER,
@@ -15,8 +20,6 @@ typedef struct {
     uint8_t word; // word to name the object
     bool boolean; // bool -> link is active or not
 } link_obj_word;
-
-#define N 5 // size of globalWordList -> number of words in universe 
 
 #define TS 8 // Time in sec. for which a kilobot stays in the same state
 #define SEC 32 // 1 second in kiloticks
@@ -52,8 +55,16 @@ typedef struct {
     uint8_t message_sent = 0; // bool -> message sent or not
     message_t transmit_msg; // message to transmit
     message_t rvd_message; // message received
+    uint8_t object; // object to name
+    uint8_t personalWord; // word to name the object
+    link_obj_word[N] links; // list of (un)active links between object and word
 } USERDATA;
 
 extern USERDATA *mydata;
+
+//////// FUNCTIONS ///////////
+
+void generateWord(void); 
+void generateLink(uint8_t object, uint8_t word) ;
 
 #endif // NAMINGGAME_H
