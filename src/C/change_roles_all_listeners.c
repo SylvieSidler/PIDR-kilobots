@@ -116,13 +116,8 @@ void loop() {
             break;
         case LISTENER:
             if (mydata->new_message == 1){
-                //mydata->last_update = kilo_ticks;
-                
                 //printf("message received\n");
                 set_color(RGB(1,1,0));
-                // if (kilo_ticks > mydata->last_update + 124) {
-                //     set_color(RGB(3,0,0));
-                // }
                 if (kilo_ticks> mydata->last_update+320){
                     //printf("test\n");
                     uint8_t random = rand()%100;
