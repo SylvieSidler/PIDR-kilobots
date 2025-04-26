@@ -11,7 +11,7 @@ void generateLink(uint8_t object, uint8_t word) {
     link_obj_word link;
     link.object = object;
     link.word = word;
-    link.boolean = true;
+    link.boolean = 1;
     mydata->links[0] = link;
 }
 
@@ -19,7 +19,7 @@ void generateLink(uint8_t object, uint8_t word) {
 void deleteLinksExceptWord(uint8_t object, uint8_t keepWord) {
     for (uint8_t i = 0; i < N; i++) {
         if (mydata->links[i].word != keepWord) { // && mydata->links[i].object == object // si plusieurs objets
-            mydata->links[i].boolean = false;
+            mydata->links[i].boolean = 0;
         }
     }
 }
