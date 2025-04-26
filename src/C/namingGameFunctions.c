@@ -25,27 +25,4 @@ void deleteLinksExceptWord(uint8_t object, uint8_t keepWord) {
 }
 
 
-void setup() { 
-    mydata->obj = OBJECT;
-    mydata->stateLS = LISTENER;
-    generateWord();
-    printf("setup object: %d, word: %d\n", mydata->obj, mydata->personalWord);
-    generateLink(mydata->obj, mydata->personalWord);
-    set_color(colors[0]);
-}
 
-
-int main()
-{
-    // Initialize the kilobots 
-    kilo_init();
-
-    // Set the callback functions
-    kilo_message_tx=message_tx;
-    kilo_message_tx_success = message_tx_success;
-    kilo_message_rx=message_rx;
-    
-    kilo_start(setup, loop);
-    
-    return 0;
-}
