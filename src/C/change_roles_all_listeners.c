@@ -82,10 +82,6 @@ void loop() {
             if (mydata->message_sent == 1){
                 //printf("message sent!\n");
                 set_color(RGB(1,0,1));
-                // if (kilo_ticks > mydata->last_update + 124) {
-                //     set_color(RGB(0,0,3));
-                //     printf("aaaaaaaaa");
-                // }
                 if (kilo_ticks> mydata->last_update+320){
                     //printf("test\n");
                     uint8_t random = rand()%100;
@@ -150,11 +146,6 @@ void loop() {
             set_color(RGB(0,3,0));
             //printf("je suis censé passer ici et pas au dessus\n");
     } 
-    //mydata->last_update = kilo_ticks;
-    // Put the main code here. This is run repeatedly.
-//#ifdef SIMULATOR
-//    printf("%d tick %d\n", kilo_uid, kilo_ticks) ;
-//#endif   
 }
     
   
