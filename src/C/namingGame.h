@@ -4,9 +4,9 @@
 #include <kilombo.h>
 
 #define N 5 // size of globalWordList -> number of words in universe 
+#define OBJECT 7 // object to name
 
 uint8_t globalWordList[] = {0, 1, 2, 3, 4}; // list of words in universe
-uint8_t object = 7; // object to name
 
 // state of kilobot : LISTENER or SPEAKER
 enum state{
