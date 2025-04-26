@@ -6,3 +6,8 @@ kilolib/
 kilombo/
 lib/
 kilolib/
+.venv/
+.vscode/
+__pycache__/
+.DS_Store
+.gitignore
