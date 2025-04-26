@@ -48,19 +48,6 @@ uint8_t colors[] = {
     RGB(3,3,3)   
 }; 
 
-typedef struct {
-    enum state stateLS; // state : LISTENER or SPEAKER
-    uint32_t last_update;
-    uint8_t new_message = 0; // bool -> new message received or not
-    uint8_t message_sent = 0; // bool -> message sent or not
-    message_t transmit_msg; // message to transmit
-    message_t rvd_message; // message received
-    uint8_t object; // object to name
-    uint8_t personalWord; // word to name the object
-    link_obj_word[N] links; // list of (un)active links between object and word
-} USERDATA;
-
-extern USERDATA *mydata;
 
 //////// FUNCTIONS ///////////
 
