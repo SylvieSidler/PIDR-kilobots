@@ -18,7 +18,7 @@ enum state{
 typedef struct {
     uint8_t object; // object to name 
     uint8_t word; // word to name the object
-    bool boolean; // bool -> link is active or not
+    uint8_t boolean; // bool -> link is active or not
 } link_obj_word;
 
 #define TS 8 // Time in sec. for which a kilobot stays in the same state
