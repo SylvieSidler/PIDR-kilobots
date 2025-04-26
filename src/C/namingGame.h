@@ -52,6 +52,7 @@ uint8_t colors[] = {
 //////// FUNCTIONS ///////////
 
 void generateWord(void); 
-void generateLink(uint8_t object, uint8_t word) ;
+void generateLink(uint8_t object, uint8_t word);
+void deleteLinksExceptWord(uint8_t object, uint8_t keepWord);
 
 #endif // NAMINGGAME_H
