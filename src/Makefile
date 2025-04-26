@@ -3,7 +3,7 @@
 #####################################################################
 
 # target program 
-PROG = move
+PROG = src/C/send_receive
 
 # extra paths (include + libs)
 EXTRA_INCS = -I/opt/local/include

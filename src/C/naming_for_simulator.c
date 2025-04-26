@@ -278,7 +278,7 @@ void setup() {
     initialize_kilobots();
     mydata->colour = RGB(0,0,0);
     set_color(mydata->colour);
-    rand_seed(kilo_uid%255);
+    
     //setup_message();
     
 }
@@ -319,6 +319,7 @@ void loop() {
                 if (kilo_ticks > mydata->last_update + 124) {
                     set_color(mydata->colour);
                     mydata->last_update = kilo_ticks;
+                    rand_seed(kilo_uid%255);
                     uint8_t rand_int = rand_soft();
                     printf("randint %d\n", rand_int);
                     if (rand_int <= (255*20)/100) {
