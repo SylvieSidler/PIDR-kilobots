@@ -16,4 +16,10 @@ void generateLink(uint8_t object, uint8_t word) {
 }
 
 // deletes all links to the object except the word in parameters 
-
+void deleteLinksExceptWord(uint8_t object, uint8_t keepWord) {
+    for (uint8_t i = 0; i < N; i++) {
+        if (mydata->links[i].word != keepWord) { // && mydata->links[i].object == object
+            mydata->links[i].boolean = false;
+        }
+    }
+}
