@@ -35,7 +35,7 @@ typedef struct {
 // 7 - blue
 // 8 - purple
 // 9 - bright white
-uint8_t colors[] = {
+uint8_t colours[] = {
     RGB(0,0,0),  
     RGB(2,0,0),  
     RGB(2,1,0),  
@@ -49,10 +49,10 @@ uint8_t colors[] = {
 }; 
 
 
-//////// FUNCTIONS ///////////
+// //////// FUNCTIONS ///////////
 
-void generateWord(void); 
-void generateLink(uint8_t object, uint8_t word);
-void deleteLinksExceptWord(uint8_t object, uint8_t keepWord);
+// void generateWord(void); 
+// void generateLink(uint8_t object, uint8_t word);
+// void deleteLinksExceptWord(uint8_t object, uint8_t keepWord);
 
 #endif // NAMINGGAME_H

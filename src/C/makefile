@@ -4,22 +4,34 @@
 # configured below, these needs to be adapted to the system.
 
 #list of c files in this project
-SOURCES=naming.c
+#SOURCES=naming_for_simulator.c
+#SOURCES = test.c
+#SOURCES=naming.c
 #SOURCES=blink.c
 #SOURCES=move.c
 #SOURCES=move_simple.c
 #SOURCES=recieve.c
 #SOURCES=sent.c
 #SOURCES=send_receive.c
+#SOURCES=change_roles.c
+#SOURCES=change_roles_all_listeners.c
+#SOURCES=change_colour_from_received_message.c
+SOURCES=namingGame.c
 
 #name of the executable file
-EXECUTABLE=naming
+#EXECUTABLE=naming_for_simulator
+#EXECUTABLE= test
+#EXECUTABLE=naming
 #EXECUTABLE=blink
 #EXECUTABLE=move
 #EXECUTABLE=move_simple
 #EXECUTABLE=recieve
 #EXECUTABLE=sent
 #EXECUTABLE=send_receive
+#EXECUTABLE=change_roles
+#EXECUTABLE=change_roles_all_listeners
+#EXECUTABLE=change_colour_from_received_message
+EXECUTABLE=namingGame
 
 # Path to the official kilolib, used for real bots only
 # Set it here, or as an environment variable in the shell:
