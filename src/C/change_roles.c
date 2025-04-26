@@ -35,32 +35,32 @@ REGISTER_USERDATA(USERDATA)
 message_t *message_tx(){
     //printf("%d,%d \n",kilo_uid, mydata->stateLH);
     if (mydata->stateLH == SPEAKER){
-        mydata->transmit_msg= globtransmit_msg;
+        mydata->transmit_msg = globtransmit_msg;
         return &globtransmit_msg;
     }
     return 0;
 }
 
 void message_tx_success(){
-    mydata->message_sent=1;
+    mydata->message_sent = 1;
     //printf("ici!\n");
 }
 
 void message_rx(message_t *msg, distance_measurement_t *dist){
-    if (mydata->new_message ==0) {
+    if (mydata->new_message == 0) {
         received_message = *msg;
-        mydata->rvd_message=received_message;
-        if (mydata->stateLH==LISTENER && received_message.data[0]==0 && received_message.data[1]==1 ){
+        mydata->rvd_message = received_message;
+        if (mydata->stateLH == LISTENER && received_message.data[0] == 0 && received_message.data[1] == 1 ){
             mydata->new_message = 1;
             //printf("here!\n");
         }
 }
 }
 void setup_message(){
-    globtransmit_msg.type= NORMAL;
-    globtransmit_msg.data[0]=0;
-    globtransmit_msg.data[1]=1;
-    globtransmit_msg.crc =message_crc(&globtransmit_msg);
+    globtransmit_msg.type = NORMAL;
+    globtransmit_msg.data[0] = 0;
+    globtransmit_msg.data[1] = 1;
+    globtransmit_msg.crc = message_crc(&globtransmit_msg);
     mydata->transmit_msg = globtransmit_msg;
 
 }
@@ -70,7 +70,7 @@ void setup() {
     int16_t id = kilo_uid;
     //printf("%d\n",id);
     //printf("%d\n",id%2);
-    if (id%2==0){
+    if (id%2 == 0){
         mydata->stateLH = LISTENER;
         set_color(RGB(3,0,0));
         //printf("here\n");
@@ -99,7 +99,7 @@ void loop() {
                 //     set_color(RGB(0,0,3));
                 //     printf("aaaaaaaaa");
                 // }
-                if (kilo_ticks> mydata->last_update+320){
+                if (kilo_ticks > mydata->last_update+320){
                     //printf("test\n");
                     uint8_t random = rand()%100;
                     if (random >85){
