@@ -100,10 +100,10 @@ void loop() {
                 //     printf("aaaaaaaaa");
                 // }
                 if (kilo_ticks> mydata->last_update+320){
-                    printf("test\n");
+                    //printf("test\n");
                     uint8_t random = rand()%100;
                     if (random >85){
-                        printf("id=%d, random =%d\n", kilo_uid, random);
+                        //printf("id=%d, random =%d\n", kilo_uid, random);
                         mydata->stateLH = LISTENER;
                         set_color(RGB(3,0,0));
                         
@@ -115,10 +115,10 @@ void loop() {
             else{
                 set_color(RGB(0,0,3));
                 if (kilo_ticks> mydata->last_update+320){
-                    printf("test\n");
+                    //printf("test\n");
                     uint8_t random = rand()%100;
                     if (random >85){
-                        printf("id=%d, random =%d\n", kilo_uid, random);
+                        //printf("id=%d, random =%d\n", kilo_uid, random);
                         mydata->stateLH = LISTENER;
                         set_color(RGB(3,0,0));
                        
@@ -137,10 +137,10 @@ void loop() {
                 //     set_color(RGB(3,0,0));
                 // }
                 if (kilo_ticks> mydata->last_update+320){
-                    printf("test\n");
+                    //printf("test\n");
                     uint8_t random = rand()%100;
                     if (random >85){
-                        printf("id=%d, random =%d\n", kilo_uid, random);
+                        //printf("id=%d, random =%d\n", kilo_uid, random);
                         mydata->stateLH = SPEAKER;
                         set_color(RGB(0,0,3));
                        
@@ -152,10 +152,10 @@ void loop() {
             else{
                 set_color(RGB(3,0,0));
                 if (kilo_ticks> mydata->last_update+320){
-                    printf("test\n");
+                    //printf("test\n");
                     uint8_t random = rand()%100;
                     if (random >85){
-                        printf("id=%d, random =%d\n", kilo_uid, random);
+                        //printf("id=%d, random =%d\n", kilo_uid, random);
                         mydata->stateLH = SPEAKER;
                         set_color(RGB(0,0,3));
                        
