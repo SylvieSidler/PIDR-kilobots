@@ -66,7 +66,7 @@ if __name__ == "__main__" :
     #cap = cv.VideoCapture(2)
     r = requests.get("http://localhost:5001/start")
     r = requests.get("http://localhost:5001/set_resolution/mode3")
-    r = requests.get("http://localhost:5001/set_camera/2")
+    r = requests.get("http://localhost:5001/set_camera/0")
     # Check if camera opened successfully
     #if cap.isOpened() == False : 
     #    print ("Unable to read camera feed" )
@@ -86,11 +86,11 @@ if __name__ == "__main__" :
     # 
     diag = math.sqrt(width**2 + height**2) # image diagonal
     dist = int(.9 * diag) # distance between 2 hugh circles
-    min_rad = 3 #int(width / 20)  # min and max of considered circles 
-    max_rad = 15 #int(min_rad * 8 )
+    min_rad = 38 #int(width / 20)  # min and max of considered circles 
+    max_rad = 39 #int(min_rad * 8 )
     dmax = 10 # min distance between 2 circles
-    hough_param_1 = 16 # see https://docs.opencv.org/4.5.1/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
-    hough_param_2 = 32
+    hough_param_1 = 20 # see https://docs.opencv.org/4.5.1/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
+    hough_param_2 = 35
 
     #
     # create a window
