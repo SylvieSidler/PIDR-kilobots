@@ -2,13 +2,16 @@ import sys, time, math
 import requests
 import pickle
 import json
-from  collections import deque
+from collections import deque
 
 import numpy as np
 import cv2 as cv
 
+# Importer la configuration
+from config import *
+
 # Classe pour mesurer les FPS sur les dernières frames (moyenne glissante)
-class FPS (object):
+class FPS(object):
     def __init__(self, avarageof=50):
         self.frametimestamps = deque(maxlen=avarageof)
 
@@ -22,10 +25,10 @@ class FPS (object):
 # Classe utilitaire pour afficher du texte sur une image
 class TextWriter(object):
     def __init__(self):
-        self._font = cv.FONT_HERSHEY_SIMPLEX
-        self._fontScale = 1
-        self._fontColor = (0, 0, 255)
-        self._lineType = 2
+        self._font = getattr(cv, DISPLAY["font"]["face"])
+        self._fontScale = DISPLAY["font"]["scale"]
+        self._fontColor = DISPLAY["font"]["color"]
+        self._lineType = DISPLAY["font"]["line_type"]
 
     def __call__(self, img, text, pos=(40, 40)):
         cv.putText(img, text, pos, self._font, self._fontScale, self._fontColor, self._lineType)
@@ -33,10 +36,11 @@ class TextWriter(object):
 # Classe pour dessiner un cercle détecté sur une image
 class CircleDrawer(object):
     def __init__(self):
-        self._center_thickness = 1
-        self._center_color = (0, 0, 255)
+        self._center_thickness = DISPLAY["circle"]["center_thickness"]
+        self._center_color = DISPLAY["circle"]["center_color"]
 
-    def __call__(self, img, circles, color=(0, 255, 0), thickness=4, bbox=False):
+    def __call__(self, img, circles, color=DISPLAY["circle"]["default_color"], 
+                 thickness=DISPLAY["circle"]["default_thickness"], bbox=False):
         circle = np.round(circles[0]).astype("int")
         x, y, r = circle
 
@@ -51,26 +55,26 @@ def nothing(*arg):
     pass
 
 if __name__ == "__main__":
-    print("openCV version {}".format(cv.__version__))
+    print(f"OpenCV version {cv.__version__}")
+    print(f"Utilisation de la configuration pour l'environnement: {ACTIVE_CONFIG['environment']}")
 
     # Configuration de la capture vidéo via serveur HTTP local
-    r = requests.get("http://localhost:5001/start")
-    r = requests.get("http://localhost:5001/set_resolution/mode3")
-    r = requests.get("http://localhost:5001/set_camera/2")
+    r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['start']}")
+    r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['set_resolution']}")
+    r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['set_camera']}")
 
-    width = 800
-    height = 600
+    width = IMAGE["width"]
+    height = IMAGE["height"]
 
     # Paramètres de la transformée de Hough pour la détection de cercles
     diag = math.sqrt(width**2 + height**2)
     dist = int(.9 * diag)
-    min_rad = 20
-    max_rad = 40
-    dmax = 10
-    hough_param_1 = 20
-    hough_param_2 = 35
+    min_rad = HOUGH["min_radius"]
+    max_rad = HOUGH["max_radius"]
+    dmax = HOUGH["distance_max"]
+    hough_param_1 = HOUGH["param1"]
+    hough_param_2 = HOUGH["param2"]
     
-
     # Création de la fenêtre et des sliders pour modifier les paramètres Hough
     cv.namedWindow('frame')
     cv.createTrackbar('par1', 'frame', hough_param_1, 500, nothing)
@@ -90,29 +94,29 @@ if __name__ == "__main__":
 
     edges = None
     counter = 0
-    work_freq = 1  # traiter une image sur n
+    work_freq = IMAGE_PROCESSING["work_freq"]
 
     # Initialisation des outils : mesure de FPS, écriture texte, dessin de cercles
     fps = FPS()
     writer = TextWriter()
     drawer = CircleDrawer()
-    kernel = np.ones((3, 3), np.uint8)
+    kernel = np.ones(IMAGE_PROCESSING["kernel"], np.uint8)
 
     while True:
         counter += 1
-        # Capture de l’image via HTTP et désérialisation
-        r = requests.get("http://localhost:5001/capture_image")
+        # Capture de l'image via HTTP et désérialisation
+        r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['capture_image']}")
         decodedjson = r.json()
         frame = pickle.loads(json.loads(decodedjson).encode('latin-1'))
         output = frame.copy()
 
-        # Prétraitement de l’image (grayscale + flou)
+        # Prétraitement de l'image (grayscale + flou)
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        gray = cv.GaussianBlur(gray, (7, 7), 0)
+        gray = cv.GaussianBlur(gray, IMAGE_PROCESSING["gaussian_blur_kernel"], 0)
 
         rows = gray.shape[0]
 
-        # Détection de cercles avec les paramètres mis à jour via l’interface
+        # Détection de cercles avec les paramètres mis à jour via l'interface
         if counter % work_freq == 0:
             counter = 0
 
@@ -143,13 +147,13 @@ if __name__ == "__main__":
             circles = np.uint16(np.around(circles_det))
             sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
 
-            # Calcul automatique de l’échelle à partir des diamètres
+            # Calcul automatique de l'échelle à partir des diamètres
             diameters_px = [2 * i[2] for i in sorted_circles]
             mean_diameter_px = np.mean(diameters_px)
-            pixels_per_cm = mean_diameter_px / 3.3  # ← basé sur ton diamètre réel en cm
+            pixels_per_cm = mean_diameter_px / PHYSICAL["circle_diameter_cm"]
 
-            # Rayon de 7 cm converti en pixels
-            extra_radius_px = int(round(3.5 * pixels_per_cm))
+            # Rayon de communication converti en pixels
+            extra_radius_px = int(round(PHYSICAL["communication_radius_cm"] * pixels_per_cm))
 
             centers_px = []
             centers_cm = []
@@ -169,10 +173,10 @@ if __name__ == "__main__":
                 cv.putText(output, f"{idx+1}", (x_px + 10, y_px - 10),
                         cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
 
-                # Cercle supplémentaire de 7 cm (en bleu)
+                # Cercle supplémentaire de communication (en bleu)
                 cv.circle(output, (x_px, y_px), extra_radius_px, (255, 0, 0), 2)
 
-            # Afficher l’échelle utilisée
+            # Afficher l'échelle utilisée
             cv.putText(output, f"1 cm = {pixels_per_cm:.2f} px", (20, output.shape[0] - 20),
                     cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
 
@@ -190,7 +194,7 @@ if __name__ == "__main__":
                     r2_cm = sorted_circles[j][2] / pixels_per_cm
 
                     # Si les zones de com se recoupent
-                    if dist_cm <= 3.5 + r2_cm or dist_cm <= 3.5 + r1_cm:
+                    if dist_cm <= PHYSICAL["communication_radius_cm"] + r2_cm or dist_cm <= PHYSICAL["communication_radius_cm"] + r1_cm:
                         # Dessiner une ligne rouge entre les centres
                         cv.line(output, centers_px[i], centers_px[j], (0, 0, 255), 2)
 
@@ -211,22 +215,22 @@ if __name__ == "__main__":
             height, width = output.shape[:2]
 
             for x in range(0, width, spacing_5cm):
-                thickness = 1 if x % spacing_10cm != 0 else 2
-                color = (50, 50, 50) if thickness == 1 else (100, 100, 100)
+                thickness = DISPLAY["grid"]["thin_line_thickness"] if x % spacing_10cm != 0 else DISPLAY["grid"]["thick_line_thickness"]
+                color = DISPLAY["grid"]["thin_line_color"] if thickness == 1 else DISPLAY["grid"]["thick_line_color"]
                 cv.line(output, (x, 0), (x, height), color, thickness)
 
                 if x % spacing_10cm == 0:
                     x_cm = x / pixels_per_cm
-                    if x_cm == 0 :
+                    if x_cm == 0:
                         cv.putText(output, f"{int(x_cm)}", (x + 2, 15),
                                 cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
-                    else :
+                    else:
                         cv.putText(output, f"{int(x_cm+1)}", (x + 2, 15),
                                 cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
 
             for y in range(0, height, spacing_5cm):
-                thickness = 1 if y % spacing_10cm != 0 else 2
-                color = (50, 50, 50) if thickness == 1 else (100, 100, 100)
+                thickness = DISPLAY["grid"]["thin_line_thickness"] if y % spacing_10cm != 0 else DISPLAY["grid"]["thick_line_thickness"]
+                color = DISPLAY["grid"]["thin_line_color"] if thickness == 1 else DISPLAY["grid"]["thick_line_color"]
                 cv.line(output, (0, y), (width, y), color, thickness)
 
                 if y % spacing_10cm == 0:
@@ -235,21 +239,22 @@ if __name__ == "__main__":
                             cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
         
         # Affichage des coordonnées converties (panneau en bas à droite)
-        panel_width = 270
-        panel_height = min(200, 20 * len(centers_cm) + 10)
-        x0 = output.shape[1] - panel_width - 20
-        y0 = output.shape[0] - panel_height - 20
+        if 'centers_cm' in locals() and centers_cm:
+            panel_width = DISPLAY["panel"]["width"]
+            panel_height = min(200, 20 * len(centers_cm) + 10)
+            x0 = output.shape[1] - panel_width - 20
+            y0 = output.shape[0] - panel_height - 20
 
-        overlay = output.copy()
-        cv.rectangle(overlay, (x0, y0), (x0 + panel_width + 10, y0 + panel_height + 10), (0, 0, 0), -1)
-        cv.addWeighted(overlay, 0.6, output, 0.4, 0, output)
+            overlay = output.copy()
+            cv.rectangle(overlay, (x0, y0), (x0 + panel_width + 10, y0 + panel_height + 10), (0, 0, 0), -1)
+            cv.addWeighted(overlay, DISPLAY["panel"]["opacity"], output, 1 - DISPLAY["panel"]["opacity"], 0, output)
 
-        for idx, (x_cm, y_cm) in enumerate(centers_cm):
-            text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
-            cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
-                    cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+            for idx, (x_cm, y_cm) in enumerate(centers_cm):
+                text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
+                cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
+                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
 
-        # Affichage du FPS en haut à gauche
+        # Affichage de l'image
         cv.imshow('frame', output)
 
         # Quitter la boucle si touche "q" pressée
@@ -258,4 +263,4 @@ if __name__ == "__main__":
 
     # Nettoyage
     cv.destroyAllWindows()
-    r = requests.get("http://localhost:5001/stop")
+    r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['stop']}")
