@@ -5,7 +5,7 @@
 #define SPEAKER 1
 uint8_t stateLS;
 uint32_t last_update;
-uint8_t i=0;
+
 
 message_t *message_tx(){
     return 0;
@@ -35,11 +35,9 @@ void loop() {
     switch(stateLS){
         case SPEAKER:
             set_color(RGB(0,0,3));
-            if (kilo_ticks> last_update+64){
-                rand_seed(i);
-                int random = rand_soft();
-                i=i+1;
-                i=i%255;
+            if (kilo_ticks> last_update+320){
+                rand_seed(kilo_uid%255);
+                uint8_t random = rand_soft();
                 if (random<40){
                     stateLS = LISTENER;
                     set_color(RGB(3,0,0));
@@ -49,11 +47,9 @@ void loop() {
             break;
         case LISTENER:
         set_color(RGB(0,0,3));
-        f (kilo_ticks> last_update+64){
-            rand_seed(i);
-            int random = rand_soft();
-            i=i+1;
-            i=i%255;
+        f (kilo_ticks> last_update+320){
+            rand_seed(kilo_uid%255);
+            uint8_t random = rand_soft();
             if (random<40){
                 stateLS = SPEAKER;
                 set_color(RGB(0,0,3));

@@ -15,8 +15,8 @@ int colours[] = {RGB(0,0,3),RGB(3,0,0),RGB(0,3,0),RGB(3,0,3),RGB(0,3,3),RGB(3,3,
 
 
 int choose_colour(){
-    rand_seed(i);
-    int random = randsoft()%6;
+    rand_seed(kilo_uid%255);
+    uint8_t random = rand_soft()%6;
     return colours[random];
 }
 
@@ -67,11 +67,9 @@ void loop() {
     switch(stateLS){
         case SPEAKER:
             set_color(RGB(0,0,3));
-            if (kilo_ticks> last_update+64){
-                rand_seed(i);
-                int random = rand_soft();
-                i=i+1;
-                i=i%255;
+            if (kilo_ticks> last_update+320){
+                rand_seed(kilo_uid%255);
+                uint8_t random = rand_soft();
                 if (random<40){
                     stateLS = LISTENER;
                     set_color(RGB(3,0,0));
@@ -81,11 +79,9 @@ void loop() {
             break;
         case LISTENER:
         set_color(RGB(0,0,3));
-        f (kilo_ticks> last_update+64){
-            rand_seed(i);
-            int random = rand_soft();
-            i=i+1;
-            i=i%255;
+        f (kilo_ticks> last_update+320){
+            rand_seed(kilo_uid%255);
+            uint8_t random = rand_soft();
             if (random<40){
                 stateLS = SPEAKER;
                 set_color(RGB(0,0,3));
