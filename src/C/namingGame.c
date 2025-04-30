@@ -9,14 +9,18 @@
 
 typedef struct {
     enum state stateLS; // state : LISTENER or SPEAKER
-    uint32_t last_update;
+    //uint32_t last_update;
     uint8_t new_message; // bool -> new message received or not
-    uint8_t message_sent; // bool -> message sent or not
+    uint8_t message_ready; // bool -> message sent or not
     message_t transmit_msg; // message to transmit
     message_t rvd_message; // message received
     uint8_t object; // object to name
     uint8_t personalWord; // word to name the object
     link_obj_word links[N]; // list of (un)active links between object and word
+    int send_cpt;
+    int receive_cpt;
+    int state_cpt;
+    int delay_start;
 } USERDATA;
 
 
@@ -52,37 +56,20 @@ void deleteLinksExceptWord(uint8_t object, uint8_t keepWord) {
 
 message_t *message_tx(){
     //printf("%d,%d \n",kilo_uid, mydata->stateLH);
-    if (mydata->message_sent == 0){
-        if (mydata->stateLS == SPEAKER){
-            mydata->transmit_msg.type= NORMAL;
-            mydata->transmit_msg.data[0]=mydata->object;
-            mydata->transmit_msg.data[1]=mydata->personalWord;
-            mydata->transmit_msg.data[2]=kilo_uid;
-            mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
-            return &mydata->transmit_msg;
-        }
-        return 0;
+    if (mydata->message_ready == 1){
+        return &mydata->transmit_msg;
     }
     return 0;
 }
 
 void message_tx_success(){
-    mydata->message_sent =1;
+    mydata->message_ready =0;
 }
 
 void message_rx(message_t *msg, distance_measurement_t *dist ){
     if (mydata->new_message ==0) {
-        int random = rand()%10;
-        if (random > 6){
-            mydata->rvd_message = *msg;
-            if (mydata->stateLS==LISTENER){
-                mydata->personalWord = mydata->rvd_message.data[1];
-                generateLink(mydata->object,mydata->personalWord);
-                deleteLinksExceptWord(mydata->object,mydata->personalWord);
-                mydata->new_message = 1;
-                //printf("here!\n");
-            }
-        }
+        mydata->rvd_message = *msg;
+        mydata->new_message = 1;
     }
 }
 
@@ -90,85 +77,143 @@ void message_rx(message_t *msg, distance_measurement_t *dist ){
 void setup() { 
     mydata->object = OBJECT;
     mydata->stateLS = LISTENER;
-    mydata->message_sent =0;
+    mydata->message_ready =0;
     mydata->new_message = 0;
     generateWord();
     //printf("setup object: %d, word: %d\n", mydata->object, mydata->personalWord);
     generateLink(mydata->object, mydata->personalWord);
-    mydata->last_update = kilo_ticks;
+    //mydata->last_update = kilo_ticks;
     set_color(colours[0]);
+    mydata->send_cpt=0;
+    mydata->receive_cpt=0;
+    mydata->state_cpt=0;
+    mydata->delay_start=rand()%320;
 }
 
 
 void loop() {
+    // if (kilo_uid == 0){
+    //     printf("kiloticks %d", kilo_ticks);
+    // }
+    if (mydata->delay_start-->0){
+        return;
+    }
+    set_color(colours[mydata->personalWord]);
+    mydata->send_cpt++;
+    mydata->receive_cpt++;
+    mydata->state_cpt++;
     switch(mydata->stateLS){
         case SPEAKER:
-            if (mydata->message_sent == 1){
-                //printf("message sent!\n");
-                set_color(RGB(1,0,1));
-                if (kilo_ticks> mydata->last_update+64){
-                   //printf("testsp1\n");
-                    uint8_t random = rand()%100;
-                    if (random >85){
-                        //printf("id=%d, random =%d\n", kilo_uid, random);
-                        mydata->stateLS = LISTENER;
-                        set_color(colours[mydata->personalWord]);
-                        
-                    }
-                    mydata->last_update = kilo_ticks;
-                }
-                mydata->message_sent=0;
-            }
-            else{
-                set_color(colours[mydata->personalWord]);
-                if (kilo_ticks> mydata->last_update+64){
-                    //printf("testsp2\n");
-                    uint8_t random = rand()%100;
-                    if (random >85){
-                        //printf("id=%d, random =%d\n", kilo_uid, random);
-                        mydata->stateLS = LISTENER;
-                        set_color(colours[mydata->personalWord]);
-                       
-                    }
-                    set_color(colours[mydata->personalWord]);
-                }
+            if (mydata->send_cpt == SEND_DELAY){
+                mydata->send_cpt =0;
+                mydata->transmit_msg.type= NORMAL;
+                mydata->transmit_msg.data[0]=mydata->object;
+                mydata->transmit_msg.data[1]=mydata->personalWord;
+                mydata->transmit_msg.data[2]=kilo_uid;
+                mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
+                mydata->message_ready = 1;
             }
             break;
         case LISTENER:
-            if (mydata->new_message == 1){
-                //printf("message received\n");
-                set_color(RGB(1,1,0));
-                if (kilo_ticks> mydata->last_update+64){
-                    //printf("testls1\n");
-                    uint8_t random = rand()%100;
-                    if (random >85){
-                        //printf("id=%d, random =%d\n", kilo_uid, random);
-                        mydata->stateLS = SPEAKER;
-                        set_color(colours[mydata->personalWord]);
-                       
+            if (mydata->receive_cpt == RECEIVE_DELAY){
+                mydata->receive_cpt=0;
+                if (mydata->new_message==1){
+                    int random = rand()%10;
+                    if (random > 6){
+                        mydata->personalWord = mydata->rvd_message.data[1];
+                        generateLink(mydata->object,mydata->personalWord);
+                        deleteLinksExceptWord(mydata->object,mydata->personalWord);
                     }
-                    mydata->last_update = kilo_ticks;
-                }
-                mydata->new_message=0;
-            }
-            else{
-                set_color(colours[mydata->personalWord]);
-                if (kilo_ticks> mydata->last_update+64){
-                    //printf("testls2\n");
-                    uint8_t random = rand()%100;
-                    if (random >85){
-                        //printf("id=%d, random =%d\n", kilo_uid, random);
-                        mydata->stateLS = SPEAKER;
-                        set_color(colours[mydata->personalWord]);
-                       
-                    }
-                    mydata->last_update = kilo_ticks;
+                    mydata->new_message=0;
                 }
             }
             break;
-    } 
-
+    }
+    if (mydata->state_cpt == STATE_DELAY){
+        mydata->state_cpt=0;
+        uint8_t random = rand()%100;
+        if (random >85){
+            if (mydata->stateLS ==SPEAKER) {
+                mydata->stateLS = LISTENER;
+                mydata->message_ready=0;
+                mydata->receive_cpt=0;
+            }
+            else{
+                mydata->stateLS = SPEAKER;
+                mydata->send_cpt=0;
+            }
+            
+        }
+    }
 }
+
+    // switch(mydata->stateLS){
+    //     case SPEAKER:
+    //         if (mydata->message_sent == 1){
+    //             //printf("message sent!\n");
+    //             set_color(RGB(1,0,1));
+    //             if (kilo_ticks> mydata->last_update+64){
+    //                //printf("testsp1\n");
+    //                 uint8_t random = rand()%100;
+    //                 if (random >85){
+    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
+    //                     mydata->stateLS = LISTENER;
+    //                     set_color(colours[mydata->personalWord]);
+                        
+    //                 }
+    //                 mydata->last_update = kilo_ticks;
+    //             }
+    //             mydata->message_sent=0;
+    //         }
+    //         else{
+    //             set_color(colours[mydata->personalWord]);
+    //             if (kilo_ticks> mydata->last_update+64){
+    //                 //printf("testsp2\n");
+    //                 uint8_t random = rand()%100;
+    //                 if (random >85){
+    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
+    //                     mydata->stateLS = LISTENER;
+    //                     set_color(colours[mydata->personalWord]);
+                       
+    //                 }
+    //                 set_color(colours[mydata->personalWord]);
+    //             }
+    //         }
+    //         break;
+    //     case LISTENER:
+    //         if (mydata->new_message == 1){
+    //             //printf("message received\n");
+    //             set_color(RGB(1,1,0));
+    //             if (kilo_ticks> mydata->last_update+64){
+    //                 //printf("testls1\n");
+    //                 uint8_t random = rand()%100;
+    //                 if (random >85){
+    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
+    //                     mydata->stateLS = SPEAKER;
+    //                     set_color(colours[mydata->personalWord]);
+                       
+    //                 }
+    //                 mydata->last_update = kilo_ticks;
+    //             }
+    //             mydata->new_message=0;
+    //         }
+    //         else{
+    //             set_color(colours[mydata->personalWord]);
+    //             if (kilo_ticks> mydata->last_update+64){
+    //                 //printf("testls2\n");
+    //                 uint8_t random = rand()%100;
+    //                 if (random >85){
+    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
+    //                     mydata->stateLS = SPEAKER;
+    //                     set_color(colours[mydata->personalWord]);
+                       
+    //                 }
+    //                 mydata->last_update = kilo_ticks;
+    //             }
+    //         }
+    //         break;
+    // } 
+
 
 
 int main()

@@ -21,8 +21,8 @@ typedef struct {
     uint8_t boolean; // bool -> link is active or not
 } link_obj_word;
 
-#define TS 8 // Time in sec. for which a kilobot stays in the same state
-#define SEC 32 // 1 second in kiloticks
+//#define TS 8 // Time in sec. for which a kilobot stays in the same state
+//#define SEC 32 // 1 second in kiloticks
 
 // dictionnary of colors : 
 // 0 - off
@@ -47,6 +47,10 @@ uint8_t colours[] = {
     RGB(1,0,1),   
     RGB(3,3,3)   
 }; 
+
+#define SEND_DELAY 64
+#define RECEIVE_DELAY 64
+#define STATE_DELAY 64
 
 
 // //////// FUNCTIONS ///////////
