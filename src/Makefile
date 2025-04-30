@@ -3,7 +3,7 @@
 #####################################################################
 
 # target program 
-PROG = C/foo
+PROG = move
 
 # extra paths (include + libs)
 EXTRA_INCS = -I/opt/local/include
