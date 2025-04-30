@@ -3,7 +3,7 @@
 #####################################################################
 
 # target program 
-PROG = move
+PROG = C/namingGame
 
 # extra paths (include + libs)
 EXTRA_INCS = -I/opt/local/include

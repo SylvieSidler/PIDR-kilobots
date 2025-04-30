@@ -17,10 +17,10 @@ typedef struct {
     uint8_t object; // object to name
     uint8_t personalWord; // word to name the object
     link_obj_word links[N]; // list of (un)active links between object and word
-    int send_cpt;
-    int receive_cpt;
-    int state_cpt;
-    int delay_start;
+    uint32_t send_cpt;
+    uint32_t receive_cpt;
+    uint32_t state_cpt;
+    uint32_t delay_start;
 } USERDATA;
 
 
@@ -30,7 +30,7 @@ REGISTER_USERDATA(USERDATA);
 
 
 void generateWord(void) {
-    int randn = rand() % N;
+    int randn = rand_soft() % N;
     mydata->personalWord = globalWordList[randn];
 }
 
@@ -83,29 +83,27 @@ void setup() {
     //printf("setup object: %d, word: %d\n", mydata->object, mydata->personalWord);
     generateLink(mydata->object, mydata->personalWord);
     //mydata->last_update = kilo_ticks;
-    set_color(colours[0]);
-    mydata->send_cpt=0;
-    mydata->receive_cpt=0;
-    mydata->state_cpt=0;
-    mydata->delay_start=rand()%320;
+    //set_color(colours[0]);
+    mydata->send_cpt=kilo_ticks;
+    mydata->receive_cpt=kilo_ticks;
+    mydata->state_cpt=kilo_ticks;
+    mydata->delay_start=0;//rand()%320;
+    rand_seed(rand_hard());
 }
 
 
 void loop() {
-    // if (kilo_uid == 0){
-    //     printf("kiloticks %d", kilo_ticks);
-    // }
+
     if (mydata->delay_start-->0){
         return;
     }
-    set_color(colours[mydata->personalWord]);
-    mydata->send_cpt++;
-    mydata->receive_cpt++;
-    mydata->state_cpt++;
+    //set_color(colours[mydata->personalWord]);
     switch(mydata->stateLS){
         case SPEAKER:
-            if (mydata->send_cpt == SEND_DELAY){
-                mydata->send_cpt =0;
+            set_color(RGB(3,0,0));
+            if (kilo_ticks > mydata->send_cpt + SEND_DELAY){
+               
+                mydata->send_cpt =kilo_ticks;
                 mydata->transmit_msg.type= NORMAL;
                 mydata->transmit_msg.data[0]=mydata->object;
                 mydata->transmit_msg.data[1]=mydata->personalWord;
@@ -115,10 +113,12 @@ void loop() {
             }
             break;
         case LISTENER:
-            if (mydata->receive_cpt == RECEIVE_DELAY){
-                mydata->receive_cpt=0;
+            set_color(RGB(0,0,3));
+            if (kilo_ticks > mydata->receive_cpt+ RECEIVE_DELAY){
+               
+                mydata->receive_cpt=kilo_ticks;
                 if (mydata->new_message==1){
-                    int random = rand()%10;
+                    int random = rand_soft()%10;
                     if (random > 6){
                         mydata->personalWord = mydata->rvd_message.data[1];
                         generateLink(mydata->object,mydata->personalWord);
@@ -129,90 +129,25 @@ void loop() {
             }
             break;
     }
-    if (mydata->state_cpt == STATE_DELAY){
-        mydata->state_cpt=0;
-        uint8_t random = rand()%100;
-        if (random >85){
+    if (kilo_ticks> mydata->state_cpt +STATE_DELAY){
+        mydata->state_cpt=kilo_ticks;
+        //uint8_t random = rand_soft()%100;
+        //if (random >1){
             if (mydata->stateLS ==SPEAKER) {
                 mydata->stateLS = LISTENER;
                 mydata->message_ready=0;
-                mydata->receive_cpt=0;
+                mydata->receive_cpt=kilo_ticks;
+                //set_color(RGB(0,0,3));
             }
             else{
                 mydata->stateLS = SPEAKER;
-                mydata->send_cpt=0;
+                mydata->send_cpt=kilo_ticks;
+                //set_color(RGB(3,0,0));
             }
             
-        }
+       // }
     }
 }
-
-    // switch(mydata->stateLS){
-    //     case SPEAKER:
-    //         if (mydata->message_sent == 1){
-    //             //printf("message sent!\n");
-    //             set_color(RGB(1,0,1));
-    //             if (kilo_ticks> mydata->last_update+64){
-    //                //printf("testsp1\n");
-    //                 uint8_t random = rand()%100;
-    //                 if (random >85){
-    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
-    //                     mydata->stateLS = LISTENER;
-    //                     set_color(colours[mydata->personalWord]);
-                        
-    //                 }
-    //                 mydata->last_update = kilo_ticks;
-    //             }
-    //             mydata->message_sent=0;
-    //         }
-    //         else{
-    //             set_color(colours[mydata->personalWord]);
-    //             if (kilo_ticks> mydata->last_update+64){
-    //                 //printf("testsp2\n");
-    //                 uint8_t random = rand()%100;
-    //                 if (random >85){
-    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
-    //                     mydata->stateLS = LISTENER;
-    //                     set_color(colours[mydata->personalWord]);
-                       
-    //                 }
-    //                 set_color(colours[mydata->personalWord]);
-    //             }
-    //         }
-    //         break;
-    //     case LISTENER:
-    //         if (mydata->new_message == 1){
-    //             //printf("message received\n");
-    //             set_color(RGB(1,1,0));
-    //             if (kilo_ticks> mydata->last_update+64){
-    //                 //printf("testls1\n");
-    //                 uint8_t random = rand()%100;
-    //                 if (random >85){
-    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
-    //                     mydata->stateLS = SPEAKER;
-    //                     set_color(colours[mydata->personalWord]);
-                       
-    //                 }
-    //                 mydata->last_update = kilo_ticks;
-    //             }
-    //             mydata->new_message=0;
-    //         }
-    //         else{
-    //             set_color(colours[mydata->personalWord]);
-    //             if (kilo_ticks> mydata->last_update+64){
-    //                 //printf("testls2\n");
-    //                 uint8_t random = rand()%100;
-    //                 if (random >85){
-    //                     //printf("id=%d, random =%d\n", kilo_uid, random);
-    //                     mydata->stateLS = SPEAKER;
-    //                     set_color(colours[mydata->personalWord]);
-                       
-    //                 }
-    //                 mydata->last_update = kilo_ticks;
-    //             }
-    //         }
-    //         break;
-    // } 
 
 
 
