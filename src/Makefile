@@ -3,7 +3,7 @@
 #####################################################################
 
 # target program 
-PROG = move
+PROG = C/foo
 
 # extra paths (include + libs)
 EXTRA_INCS = -I/opt/local/include
@@ -40,7 +40,7 @@ SIM_EXE= $(PROG)
 ROB_EXE= $(PROG).hex
 
 # targets to make 
-all: $(ROB_EXE) #$(SIM_EXE) 
+all: $(ROB_EXE) $(SIM_EXE) 
 
 clean :
 	$(RM) *.o *.elf
