@@ -79,7 +79,6 @@ void setup() {
     mydata->stateLS = LISTENER;
     mydata->message_ready =0;
     mydata->new_message = 0;
-    generateWord();
     //printf("setup object: %d, word: %d\n", mydata->object, mydata->personalWord);
     generateLink(mydata->object, mydata->personalWord);
     //mydata->last_update = kilo_ticks;
@@ -89,12 +88,12 @@ void setup() {
     mydata->state_cpt=kilo_ticks;
     mydata->delay_start=0;//rand()%320;
     rand_seed(rand_hard());
+    generateWord();
 }
 
 
 void loop() {
-
-    if (mydata->delay_start-->0){
+    if (mydata->delay_start--<=0){
         return;
     }
     //set_color(colours[mydata->personalWord]);
@@ -102,7 +101,6 @@ void loop() {
         case SPEAKER:
             set_color(RGB(3,0,0));
             if (kilo_ticks > mydata->send_cpt + SEND_DELAY){
-               
                 mydata->send_cpt =kilo_ticks;
                 mydata->transmit_msg.type= NORMAL;
                 mydata->transmit_msg.data[0]=mydata->object;
@@ -115,7 +113,6 @@ void loop() {
         case LISTENER:
             set_color(RGB(0,0,3));
             if (kilo_ticks > mydata->receive_cpt+ RECEIVE_DELAY){
-               
                 mydata->receive_cpt=kilo_ticks;
                 if (mydata->new_message==1){
                     int random = rand_soft()%10;
@@ -131,21 +128,21 @@ void loop() {
     }
     if (kilo_ticks> mydata->state_cpt +STATE_DELAY){
         mydata->state_cpt=kilo_ticks;
-        //uint8_t random = rand_soft()%100;
-        //if (random >1){
+        uint8_t random = rand_soft()%100;
+        if (random >50){
             if (mydata->stateLS ==SPEAKER) {
                 mydata->stateLS = LISTENER;
                 mydata->message_ready=0;
                 mydata->receive_cpt=kilo_ticks;
-                //set_color(RGB(0,0,3));
+                set_color(RGB(0,0,3));
             }
             else{
                 mydata->stateLS = SPEAKER;
                 mydata->send_cpt=kilo_ticks;
-                //set_color(RGB(3,0,0));
+                set_color(RGB(3,0,0));
             }
             
-       // }
+        }
     }
 }
 
