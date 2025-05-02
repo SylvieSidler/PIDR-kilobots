@@ -48,9 +48,9 @@ uint8_t colours[] = {
     RGB(3,3,3)   
 }; 
 
-#define SEND_DELAY 64
-#define RECEIVE_DELAY 64
-#define STATE_DELAY 64
+#define SEND_DELAY 2*32 
+#define RECEIVE_DELAY 2*32
+#define STATE_DELAY 2*32
 
 
 // //////// FUNCTIONS ///////////
