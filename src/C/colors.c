@@ -26,40 +26,7 @@ REGISTER_USERDATA(USERDATA);
 
 
 void setup() { 
-    switch (kilo_uid%10) {
-        case 0:
-            mydata->personalWord = 0; // off
-            break;
-        case 1:
-            mydata->personalWord = 1; // red
-            break;
-        case 2:
-            mydata->personalWord = 2; // orange 
-            break;
-        case 3:
-            mydata->personalWord = 3; // yellow
-            break;
-        case 4:
-            mydata->personalWord = 4; // yellowish green
-            break;
-        case 5:
-            mydata->personalWord = 5; // green
-            break;
-        case 6:
-            mydata->personalWord = 6; // cyan
-            break;
-        case 7:
-            mydata->personalWord = 7; // blue
-            break;
-        case 8:
-            mydata->personalWord = 8; // purple
-            break;
-        case 9:
-            mydata->personalWord = 9; // bright white
-            break;
-        default:
-            mydata->personalWord = rand_soft() % N; // random word
-    }
+    mydata->personalWord = rand_soft() % 10; // Randomly assign a word from 0 to 9
     set_color(colours[mydata->personalWord]);
 }
 
