@@ -14,6 +14,14 @@ enum state{
     SPEAKER
 };
 
+enum direction{
+    RIGHT,
+    LEFT,
+    FORWARD,
+    BACKWARD,
+    STOP
+};
+
 // define a link betwee n an object and a word and its status : active or not
 typedef struct {
     uint8_t object; // object to name 
@@ -48,9 +56,11 @@ uint8_t colours[] = {
     RGB(3,3,3)   
 }; 
 
-#define SEND_DELAY 2*32 
+#define SEND_DELAY 2*32
 #define RECEIVE_DELAY 2*32
-#define STATE_DELAY 2*32
+#define STATE_DELAY 4*32
+#define MOVE_DELAY 2*32
+#define NO_RECEPTION 4*32
 
 
 // //////// FUNCTIONS ///////////
