@@ -42,6 +42,19 @@ ENVIRONMENTS = {
             "circle_diameter_cm": 3.3,
             "communication_radius_cm": 3.5
         }
+    },
+    "autre": {
+        "hough": {
+            "param1": 40,
+            "param2": 40,
+            "min_radius": 60,
+            "max_radius": 62,
+            "distance_max": 10
+        },
+        "physical": {
+            "circle_diameter_cm": 3,
+            "communication_radius_cm": 3.5
+        }
     }
 }
 
