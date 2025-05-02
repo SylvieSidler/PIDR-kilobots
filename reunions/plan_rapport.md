@@ -2,7 +2,7 @@
 
 penser à mettre les numéros de pages
 
-# En premier 
+# 1ère page
 - un titre : Analyse et implémentation de stratégies de diffusion d'information dans un essaim de Kilobots 
 - la liste des auteurs et leurs affiliations : les noms des membres du groupe et de l’encadrant du projet
 nom prénom, affiliation, email & 
