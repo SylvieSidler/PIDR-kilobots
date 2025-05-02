@@ -64,30 +64,18 @@ void move(){
     switch(mydata->dir){
         case RIGHT:
             spinup_motors();
-            if (kilo_uid==0){
-                printf("aaaaaaaaaaaa1\n");
-            }
             set_motors(0,kilo_straight_right);
             break;
         case LEFT:
             spinup_motors();
-            if (kilo_uid==0){
-                printf("aaaaaaaaaaaa2\n");
-            }
             set_motors(kilo_straight_left,0);
             break;
         case FORWARD:
             spinup_motors();
-            if (kilo_uid==0){
-                printf("aaaaaaaaaaaa3\n");
-            }
             set_motors(kilo_straight_left,kilo_straight_right);
             break;
         case BACKWARD:
             spinup_motors();
-            if (kilo_uid==0){
-                printf("aaaaaaaaaaaa4\n");
-            }
             set_motors(kilo_turn_left,0);
             break;
         case STOP:
@@ -192,7 +180,6 @@ void loop() {
                 move_kilobot();
                 if (kilo_ticks> mydata->move_cpt+MOVE_DELAY){
                     set_motors(0,0);
-                    printf("hereloop");
                     mydata->dir = STOP;
                     mydata->move_cpt = kilo_ticks;
                    
@@ -204,7 +191,7 @@ void loop() {
     if (kilo_ticks> mydata->state_cpt +STATE_DELAY){
         mydata->state_cpt=kilo_ticks;
         uint8_t random = rand_soft()%100;
-        if (random >50 && kilo_uid!=0){
+        if (random >50){
             if (mydata->stateLS ==SPEAKER) {
                 mydata->stateLS = LISTENER;
                 mydata->message_ready=0;
