@@ -21,6 +21,9 @@ typedef struct {
     uint32_t receive_cpt;
     uint32_t state_cpt;
     uint32_t delay_start;
+    enum direction dir;
+    uint32_t move_cpt;
+    uint32_t last_message_received_time;
 } USERDATA;
 
 
@@ -52,6 +55,59 @@ void deleteLinksExceptWord(uint8_t object, uint8_t keepWord) {
     }
 }
 
+void random_direction(){
+    int randn= rand_soft()%4;
+    mydata->dir = randn;
+}
+
+void move(){
+    switch(mydata->dir){
+        case RIGHT:
+            spinup_motors();
+            if (kilo_uid==0){
+                printf("aaaaaaaaaaaa1\n");
+            }
+            set_motors(0,kilo_straight_right);
+            break;
+        case LEFT:
+            spinup_motors();
+            if (kilo_uid==0){
+                printf("aaaaaaaaaaaa2\n");
+            }
+            set_motors(kilo_straight_left,0);
+            break;
+        case FORWARD:
+            spinup_motors();
+            if (kilo_uid==0){
+                printf("aaaaaaaaaaaa3\n");
+            }
+            set_motors(kilo_straight_left,kilo_straight_right);
+            break;
+        case BACKWARD:
+            spinup_motors();
+            if (kilo_uid==0){
+                printf("aaaaaaaaaaaa4\n");
+            }
+            set_motors(kilo_turn_left,0);
+            break;
+        case STOP:
+            set_motors(0,0);
+            break;
+    }
+}
+
+void move_kilobot(){
+    uint8_t rand = rand_soft()%100;
+    if (rand> 50){
+        random_direction();
+        move();
+        mydata->move_cpt = kilo_ticks;
+    }
+    else{
+        move();
+        mydata->move_cpt = kilo_ticks;
+    }
+}
 
 
 message_t *message_tx(){
@@ -87,6 +143,9 @@ void setup() {
     mydata->receive_cpt=kilo_ticks;
     mydata->state_cpt=kilo_ticks;
     mydata->delay_start=0;//rand()%320;
+    mydata->move_cpt = kilo_ticks;
+    mydata->last_message_received_time= kilo_ticks;
+    mydata->dir = STOP;
     rand_seed(rand_hard());
     generateWord();
 }
@@ -109,12 +168,16 @@ void loop() {
                 mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
                 mydata->message_ready = 1;
             }
+            move();
             break;
         case LISTENER:
             set_color(RGB(0,0,3));
             if (kilo_ticks > mydata->receive_cpt+ RECEIVE_DELAY){
                 mydata->receive_cpt=kilo_ticks;
                 if (mydata->new_message==1){
+                    mydata->last_message_received_time=kilo_ticks;
+                    mydata->dir=STOP;
+                    move();
                     int random = rand_soft()%10;
                     if (random > 6){
                         mydata->personalWord = mydata->rvd_message.data[1];
@@ -124,22 +187,39 @@ void loop() {
                     mydata->new_message=0;
                 }
             }
+            if (kilo_ticks>mydata->last_message_received_time+NO_RECEPTION){
+                mydata->last_message_received_time=kilo_ticks;
+                move_kilobot();
+                if (kilo_ticks> mydata->move_cpt+MOVE_DELAY){
+                    set_motors(0,0);
+                    printf("hereloop");
+                    mydata->dir = STOP;
+                    mydata->move_cpt = kilo_ticks;
+                   
+                }
+            }
+
             break;
     }
     if (kilo_ticks> mydata->state_cpt +STATE_DELAY){
         mydata->state_cpt=kilo_ticks;
         uint8_t random = rand_soft()%100;
-        if (random >50){
+        if (random >50 && kilo_uid!=0){
             if (mydata->stateLS ==SPEAKER) {
                 mydata->stateLS = LISTENER;
                 mydata->message_ready=0;
                 mydata->receive_cpt=kilo_ticks;
+                mydata->move_cpt = kilo_ticks;
+                mydata->last_message_received_time=kilo_ticks;
                 set_color(RGB(0,0,3));
             }
             else{
                 mydata->stateLS = SPEAKER;
                 mydata->send_cpt=kilo_ticks;
                 set_color(RGB(3,0,0));
+                mydata->dir=STOP;
+                mydata->move_cpt = kilo_ticks;
+                move();
             }
             
         }
