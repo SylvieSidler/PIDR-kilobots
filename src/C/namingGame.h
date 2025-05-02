@@ -3,10 +3,10 @@
 
 #include <kilombo.h>
 
-#define N 5 // size of globalWordList -> number of words in universe 
+#define N 10 // size of globalWordList -> number of words in universe 
 #define OBJECT 7 // object to name
 
-uint8_t globalWordList[] = {0, 1, 2, 3, 4}; // list of words in universe
+uint8_t globalWordList[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}; // list of words in universe
 
 // state of kilobot : LISTENER or SPEAKER
 enum state{
@@ -32,28 +32,18 @@ typedef struct {
 //#define TS 8 // Time in sec. for which a kilobot stays in the same state
 //#define SEC 32 // 1 second in kiloticks
 
-// dictionnary of colors : 
-// 0 - off
-// 1 - red
-// 2 - orange
-// 3 - yellow
-// 4 - yellowish green
-// 5 - green
-// 6 - cyan
-// 7 - blue
-// 8 - purple
-// 9 - bright white
+// dictionnary of colors 
 uint8_t colours[] = {
-    RGB(0,0,0),  
-    RGB(2,0,0),  
-    RGB(2,1,0),  
-    RGB(2,2,0),  
-    RGB(1,2,0),  
-    RGB(0,2,0),  
-    RGB(0,1,1),  
-    RGB(0,0,2),  
-    RGB(1,0,1),   
-    RGB(3,3,3)   
+    RGB(3,3,3), // white
+    RGB(2,0,0), // red
+    RGB(2,2,0), // yellow
+    RGB(0,2,0), // green
+    RGB(0,0,2), // bleu
+    RGB(1,0,1), // purple
+    RGB(0,1,1), // cyan
+    RGB(1,2,0), // yellowish green  
+    RGB(2,1,0), // orange
+    RGB(0,0,0)  // off - noir
 }; 
 
 #define SEND_DELAY 2*32

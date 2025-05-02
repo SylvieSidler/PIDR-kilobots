@@ -3,7 +3,7 @@
 #####################################################################
 
 # target program 
-PROG = C/namingGame
+PROG = C/colors
 
 # extra paths (include + libs)
 EXTRA_INCS = -I/opt/local/include

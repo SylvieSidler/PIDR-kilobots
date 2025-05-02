@@ -51,20 +51,22 @@ class CircleDrawer(object):
             cv.rectangle(output, (x - r, y - r), (x + r, y + r), self._center_color, self._center_thickness)
 
 def get_led_color_name(hue):
+    # violet : 140
+    # bleu : 120
     if 0 <= hue <= 10 or 160 <= hue <= 180:
-        return "rouge"
+        return hue#"rouge"
     elif 10 < hue <= 30:
-        return "orange"
+        return hue#"orange"
     elif 30 < hue <= 45:
-        return "jaune"
+        return hue#"jaune"
     elif 45 < hue <= 85:
-        return "vert"
+        return hue#"vert"
     elif 85 < hue <= 130:
-        return "bleu"
+        return hue#"bleu"
     elif 130 < hue <= 160:
-        return "violet"
+        return hue#"violet"
     else:
-        return "inconnu"
+        return hue#"inconnu"
 
 def detect_led_color_in_circle(bgr_image, center, radius, num_edge_samples=8, sample_radius=4):
     h, w = bgr_image.shape[:2]
@@ -171,7 +173,10 @@ if __name__ == "__main__":
     drawer = CircleDrawer()
     kernel = np.ones(IMAGE_PROCESSING["kernel"], np.uint8)
 
+    process_mode = "calib"
+
     while True:
+
         counter += 1
         # Capture de l'image via HTTP et désérialisation
         r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['capture_image']}")
@@ -211,75 +216,99 @@ if __name__ == "__main__":
                                           minRadius=min_rad,
                                           maxRadius=max_rad)
 
-        # Affichage des cercles détectés
-        if circles_det is not None:
-            circles = np.uint16(np.around(circles_det))
-            sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
+            if process_mode == "calib" :
+                if circles_det is not None:
+                    circles = np.uint16(np.around(circles_det))
+                    sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
 
-            # Calcul automatique de l'échelle à partir des diamètres
-            diameters_px = [2 * i[2] for i in sorted_circles]
-            mean_diameter_px = np.mean(diameters_px)
-            pixels_per_cm = mean_diameter_px / PHYSICAL["circle_diameter_cm"]
+                    # Calcul automatique de l'échelle à partir des diamètres
+                    diameters_px = [2 * i[2] for i in sorted_circles]
+                    mean_diameter_px = np.mean(diameters_px)
+                    pixels_per_cm = mean_diameter_px / PHYSICAL["calib_diametre_cm"]
+                    
 
-            # Rayon de communication converti en pixels
-            extra_radius_px = int(round(PHYSICAL["communication_radius_cm"] * pixels_per_cm))
+            if process_mode == "detect" :
 
-            centers_px = []
-            centers_cm = []
-            detected_colors = []
+                min_rad = HOUGH["min_radius"]
+                max_rad = HOUGH["max_radius"]
+                dmax = HOUGH["distance_max"]
+                hough_param_1 = HOUGH["param1"]
+                hough_param_2 = HOUGH["param2"]
+
+                # Affichage des cercles détectés
+                if circles_det is not None:
+                    circles = np.uint16(np.around(circles_det))
+                    sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
+
+                    # Calcul automatique de l'échelle à partir des diamètres
+                    diameters_px = [2 * i[2] for i in sorted_circles]
+                    mean_diameter_px = np.mean(diameters_px)
+                    pixels_per_cm = mean_diameter_px / PHYSICAL["circle_diameter_cm"]
+
+                    # Rayon de communication converti en pixels
+                    extra_radius_px = int(round(PHYSICAL["communication_radius_cm"] * pixels_per_cm))
+
+                    centers_px = []
+                    centers_cm = []
+                    detected_colors = []
 
 
-            for idx, i in enumerate(sorted_circles):
-                x_px, y_px, r_px = i
-                centers_px.append((x_px, y_px))
+                    for idx, i in enumerate(sorted_circles):
+                        x_px, y_px, r_px = i
+                        centers_px.append((x_px, y_px))
 
-                # Conversion en cm avec origine en haut à gauche
-                x_cm = x_px / pixels_per_cm
-                y_cm = y_px / pixels_per_cm
-                centers_cm.append((x_cm, y_cm))
+                        # Conversion en cm avec origine en haut à gauche
+                        x_cm = x_px / pixels_per_cm
+                        y_cm = y_px / pixels_per_cm
+                        centers_cm.append((x_cm, y_cm))
 
-                # Cercle d'origine
-                cv.circle(output, (x_px, y_px), 1, (0, 100, 100), 1)
-                cv.circle(output, (x_px, y_px), r_px, (0, 255, 0), 2)
-                cv.putText(output, f"{idx+1}", (x_px + 10, y_px - 10),
-                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                        # Cercle d'origine
+                        cv.circle(output, (x_px, y_px), 1, (0, 100, 100), 1)
+                        cv.circle(output, (x_px, y_px), r_px, (0, 255, 0), 1)
+                        cv.putText(output, f"{idx+1}", (x_px + 10, y_px - 10),
+                                cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
 
-                color_name = detect_led_color_in_circle(frame, (x_px, y_px), r_px)
-                detected_colors.append(color_name)
-                
-                # --- Détection de couleur LED ---
-                led_color = detect_led_color_in_circle(frame, (x_px, y_px), r_px)
-                cv.putText(output, f"LED: {led_color}", (x_px + 10, y_px + 10),
-                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                        color_name = detect_led_color_in_circle(frame, (x_px, y_px), r_px)
+                        detected_colors.append(color_name)
+                        
+                        # --- Détection de couleur LED ---
+                        led_color = detect_led_color_in_circle(frame, (x_px, y_px), r_px)
+                        cv.putText(output, f"{led_color}", (x_px + 10, y_px + 10),
+                                cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
 
-                # Cercle supplémentaire de communication (en bleu)
-                cv.circle(output, (x_px, y_px), extra_radius_px, (255, 0, 0), 2)
+                        # Cercle supplémentaire de communication (en bleu)
+                        if AFFICHAGE["cercle_communication"] == True :
+                            if led_color == "rouge":
+                                cv.circle(output, (x_px, y_px), extra_radius_px, (0, 0, 255), 1)
+                            else :
+                                cv.circle(output, (x_px, y_px), extra_radius_px, (255, 0, 0), 1)
 
-            # Afficher l'échelle utilisée
-            cv.putText(output, f"1 cm = {pixels_per_cm:.2f} px", (20, output.shape[0] - 20),
-                    cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+                    # Afficher l'échelle utilisée
+                    cv.putText(output, f"1 cm = {pixels_per_cm:.2f} px", (20, output.shape[0] - 20),
+                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
 
-            # Liaisons : créer des lignes rouges entre kilobits pouvant communiquer
-            for i in range(len(centers_cm)):
-                for j in range(i + 1, len(centers_cm)):
-                    x1_cm, y1_cm = centers_cm[i]
-                    x2_cm, y2_cm = centers_cm[j]
+                    # Liaisons : créer des lignes rouges entre kilobits pouvant communiquer
+                    for i in range(len(centers_cm)):
+                        for j in range(i + 1, len(centers_cm)):
+                            x1_cm, y1_cm = centers_cm[i]
+                            x2_cm, y2_cm = centers_cm[j]
 
-                    # Distance entre centres en cm
-                    dist_cm = math.hypot(x2_cm - x1_cm, y2_cm - y1_cm)
+                            # Distance entre centres en cm
+                            dist_cm = math.hypot(x2_cm - x1_cm, y2_cm - y1_cm)
 
-                    # Rayon réel des cercles en cm (dérivé de leur rayon pixels)
-                    r1_cm = sorted_circles[i][2] / pixels_per_cm
-                    r2_cm = sorted_circles[j][2] / pixels_per_cm
+                            # Rayon réel des cercles en cm (dérivé de leur rayon pixels)
+                            r1_cm = sorted_circles[i][2] / pixels_per_cm
+                            r2_cm = sorted_circles[j][2] / pixels_per_cm
 
-                    # Si les zones de com se recoupent
-                    if dist_cm <= PHYSICAL["communication_radius_cm"] + r2_cm or dist_cm <= PHYSICAL["communication_radius_cm"] + r1_cm:
-                        # Dessiner une ligne rouge entre les centres
-                        cv.line(output, centers_px[i], centers_px[j], (0, 0, 255), 2)
-            
-            if detected_colors and all(c == detected_colors[0] for c in detected_colors):
-                cv.putText(output, "Success: All LEDs are the same color!",
-                        (50, 50), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
+                            # Si les zones de com se recoupent
+                            if dist_cm <= PHYSICAL["communication_radius_cm"] + r2_cm or dist_cm <= PHYSICAL["communication_radius_cm"] + r1_cm:
+                                # Dessiner une ligne rouge entre les centres
+                                if AFFICHAGE["lien_communication"] == True :
+                                    cv.line(output, centers_px[i], centers_px[j], (0, 0, 0), 2)
+                    
+                    if detected_colors and all(c == detected_colors[0] for c in detected_colors):
+                        cv.putText(output, "Success: All LEDs are the same color!",
+                                (50, 50), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
 
 
         # Affichage des contours (optionnel, pour visualisation)
@@ -323,27 +352,33 @@ if __name__ == "__main__":
                             cv.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv.LINE_AA)
         
         # Affichage des coordonnées converties (panneau en bas à droite)
-        if 'centers_cm' in locals() and centers_cm:
-            panel_width = DISPLAY["panel"]["width"]
-            panel_height = min(200, 20 * len(centers_cm) + 10)
-            x0 = output.shape[1] - panel_width - 20
-            y0 = output.shape[0] - panel_height - 20
+        if process_mode == "detect" :
+            if 'centers_cm' in locals() and centers_cm:
+                panel_width = DISPLAY["panel"]["width"]
+                panel_height = min(200, 20 * len(centers_cm) + 10)
+                x0 = output.shape[1] - panel_width - 20
+                y0 = output.shape[0] - panel_height - 20
 
-            overlay = output.copy()
-            cv.rectangle(overlay, (x0, y0), (x0 + panel_width + 10, y0 + panel_height + 10), (0, 0, 0), -1)
-            cv.addWeighted(overlay, DISPLAY["panel"]["opacity"], output, 1 - DISPLAY["panel"]["opacity"], 0, output)
+                overlay = output.copy()
+                cv.rectangle(overlay, (x0, y0), (x0 + panel_width + 10, y0 + panel_height + 10), (0, 0, 0), -1)
+                cv.addWeighted(overlay, DISPLAY["panel"]["opacity"], output, 1 - DISPLAY["panel"]["opacity"], 0, output)
 
-            for idx, (x_cm, y_cm) in enumerate(centers_cm):
-                text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
-                cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
-                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+                for idx, (x_cm, y_cm) in enumerate(centers_cm):
+                    text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
+                    #cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
+                    #        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
 
         # Affichage de l'image
         cv.imshow('frame', output)
 
         # Quitter la boucle si touche "q" pressée
-        if cv.waitKey(1) & 0xFF == ord('q'):
+        key = cv.waitKey(1)
+        if 0xFF & key == ord('q'):
             break
+        if 0xFF & key == ord('c'):
+            process_mode = "calib"
+        if 0xFF & key == ord('d'):
+            process_mode = "detect"
 
     # Nettoyage
     cv.destroyAllWindows()

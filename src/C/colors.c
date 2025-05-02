@@ -25,7 +25,8 @@ typedef struct {
 REGISTER_USERDATA(USERDATA);
 
 
-void setup() { 
+void setup() {
+    rand_seed(rand_hard(kilo_uid));
     mydata->personalWord = rand_soft() % 10; // Randomly assign a word from 0 to 9
     set_color(colours[mydata->personalWord]);
 }
