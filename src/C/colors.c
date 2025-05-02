@@ -57,8 +57,6 @@ void setup() {
         case 9:
             mydata->personalWord = 9; // bright white
             break;
-        default:
-            mydata->personalWord = rand_soft() % N; // random word
     }
     set_color(colours[mydata->personalWord]);
 }
