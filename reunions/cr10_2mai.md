@@ -14,7 +14,7 @@ Si un kilbots en état de `LISTENER` n'a pas recu de message au bout de 4 second
 
 + faire une course entre les kilobots 
 
-[move_straight.c](../src/C/move_straight.c)
+[move_straight.c](../src/C/move_straight.c) -> réality gap (différence simulateur / réalité) : les robots ne vont pas tous tout droit contrairement à ce qui a été programmé
 
 ### Détection 
 détection de la couleur et affichage 
@@ -36,7 +36,7 @@ illustration par le naming game : convergence vers une association objet-mot
 faire comprendre les grandes lignes du rapport mais pas tous les détails
 on parle à des scientifiques, pas besoin de trop vulgariser, il faut laisser de la marge pour les qestions après 
 
-notés sur :
+La soutenance est notée sur :
 - le respect du temps
 - la qualité des slides
 - la qualité de la prise de parole
@@ -46,6 +46,7 @@ notés sur :
 
 # Prochaine réunion 
 
-## .. mai - ..h
+## Date : à définir
 ## TODO 
-
+- analyser si les couleurs sont les mêmes : les robots sont arrivés à un consensus 
+- avancer sur le rapport 
