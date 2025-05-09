@@ -39,7 +39,6 @@ def set_resolution(mode):
     with lock :
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-
     return "Resolution set", 200
 
 @app.route('/set_camera/<int:new_camera_id>', methods=['GET'])

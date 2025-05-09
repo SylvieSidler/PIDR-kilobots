@@ -5,15 +5,15 @@ HTTP_SERVER = {
     "endpoints": {
         "start": "/start",
         "stop": "/stop",
-        "set_resolution": "/set_resolution/mode3",
-        "set_camera": "/set_camera/0",
+        "set_resolution": "/set_resolution/mode2",
+        "set_camera": "/set_camera/2",
         "capture_image": "/capture_image"
     }
 }
 
 IMAGE = {
-    "width": 800,
-    "height": 600
+    "width": 1200,
+    "height": 720
 }
 
 AFFICHAGE = {
@@ -37,11 +37,20 @@ ENVIRONMENTS = {
     },
     "laboratoire": {
         "hough": {
-            "param1": 42,
-            "param2": 42,
-            "min_radius": 8,
-            "max_radius": 12,
-            "distance_max": 10
+            "calib": {
+                "param1": 53,
+                "param2": 53,
+                "min_radius": 8,
+                "max_radius": 11,
+                "distance_max": 10
+            },
+            "detect": {
+                "param1": 42,
+                "param2": 42,
+                "min_radius": 8,
+                "max_radius": 12,
+                "distance_max": 10
+            }
         },
         "physical": {
             "circle_diameter_cm": 3.3,
@@ -53,10 +62,10 @@ ENVIRONMENTS = {
     },
     "autre": {
         "hough": {
-            "param1": 50,
-            "param2": 50,
-            "min_radius": 72,
-            "max_radius": 76,
+            "param1": 42,
+            "param2": 42,
+            "min_radius": 6,
+            "max_radius": 10,
             "distance_max": 10
         },
         "physical": {

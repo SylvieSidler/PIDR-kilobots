@@ -131,21 +131,28 @@ if __name__ == "__main__":
 
     # Configuration de la capture vidéo via serveur HTTP local
     r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['start']}")
-    r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['set_resolution']}")
     r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['set_camera']}")
+    r = requests.get(f"{HTTP_SERVER['base_url']}{HTTP_SERVER['endpoints']['set_resolution']}")
 
     width = IMAGE["width"]
     height = IMAGE["height"]
+    process_mode = "calib"
 
     # Paramètres de la transformée de Hough pour la détection de cercles
     diag = math.sqrt(width**2 + height**2)
     dist = int(.9 * diag)
-    min_rad = HOUGH["min_radius"]
-    max_rad = HOUGH["max_radius"]
-    dmax = HOUGH["distance_max"]
-    hough_param_1 = HOUGH["param1"]
-    hough_param_2 = HOUGH["param2"]
     
+    process_mode = "calib"
+
+    if process_mode in HOUGH :
+        hough_mode_config = HOUGH[process_mode]
+        
+    min_rad = hough_mode_config["min_radius"]
+    max_rad = hough_mode_config["max_radius"]
+    dmax = hough_mode_config["distance_max"]
+    hough_param_1 = hough_mode_config["param1"]
+    hough_param_2 = hough_mode_config["param2"]
+
     # Création de la fenêtre et des sliders pour modifier les paramètres Hough
     cv.namedWindow('frame')
     cv.createTrackbar('par1', 'frame', hough_param_1, 500, nothing)
@@ -172,8 +179,6 @@ if __name__ == "__main__":
     writer = TextWriter()
     drawer = CircleDrawer()
     kernel = np.ones(IMAGE_PROCESSING["kernel"], np.uint8)
-
-    process_mode = "calib"
 
     # Charger les paramètres de calibrage s'ils existent
     calibration_file = 'camera_calibration.json'
@@ -242,6 +247,30 @@ if __name__ == "__main__":
 
                 if circles_det is not None:
                     circles = np.uint16(np.around(circles_det))
+                    sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
+
+                    # Calcul automatique de l'échelle à partir des diamètres
+                    diameters_px = [2 * i[2] for i in sorted_circles]
+                    mean_diameter_px = np.mean(diameters_px)
+                    pixels_per_cm = mean_diameter_px / PHYSICAL["circle_diameter_cm"]
+
+                    # Rayon de communication converti en pixels
+                    extra_radius_px = int(round(PHYSICAL["communication_radius_cm"] * pixels_per_cm))
+
+                    centers_px = []
+                    centers_cm = []
+                    for idx, i in enumerate(sorted_circles):
+                        x_px, y_px, r_px = i
+                        centers_px.append((x_px, y_px))
+
+                        # Conversion en cm avec origine en haut à gauche
+                        x_cm = x_px / pixels_per_cm
+                        y_cm = y_px / pixels_per_cm
+                        centers_cm.append((x_cm, y_cm))
+
+                        # Cercle d'origine
+                        cv.circle(output, (x_px, y_px), 1, (0, 100, 100), 1)
+                        cv.circle(output, (x_px, y_px), r_px, (0, 255, 255), 1)
                     
                     # Trier les cercles par position Y (le plus haut d'abord)
                     sorted_circles_by_y = sorted(circles[0, :], key=lambda c: c[1])
@@ -392,15 +421,10 @@ if __name__ == "__main__":
                     # Ajouter un bouton pour sauvegarder le calibrage (touche 's')
                     cv.putText(output, "Appuyez sur 's' pour sauvegarder le calibrage", 
                             (width//2 - 150, height - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-                
+
+
 
             if process_mode == "detect" :
-
-                min_rad = HOUGH["min_radius"]
-                max_rad = HOUGH["max_radius"]
-                dmax = HOUGH["distance_max"]
-                hough_param_1 = HOUGH["param1"]
-                hough_param_2 = HOUGH["param2"]
 
                 # Affichage des cercles détectés
                 if circles_det is not None:
