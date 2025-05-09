@@ -144,6 +144,9 @@ if __name__ == "__main__":
     
     process_mode = "calib"
 
+    saved_calib_scale = None
+    saved_pixels_per_cm = None
+
     if process_mode in HOUGH :
         hough_mode_config = HOUGH[process_mode]
         
@@ -179,20 +182,6 @@ if __name__ == "__main__":
     writer = TextWriter()
     drawer = CircleDrawer()
     kernel = np.ones(IMAGE_PROCESSING["kernel"], np.uint8)
-
-    # Charger les paramètres de calibrage s'ils existent
-    calibration_file = 'camera_calibration.json'
-    saved_pixels_per_cm = None
-    saved_grid_angle_deg = None
-
-    try:
-        with open(calibration_file, 'r') as f:
-            calib_data = json.load(f)
-            saved_pixels_per_cm = calib_data.get('pixels_per_cm')
-            saved_grid_angle_deg = calib_data.get('grid_angle_deg')
-            print(f"Calibrage chargé: {saved_pixels_per_cm:.2f} pixels/cm, angle: {saved_grid_angle_deg:.1f} degrés")
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("Aucun fichier de calibrage trouvé ou fichier invalide.")
 
     while True:
 
@@ -422,7 +411,8 @@ if __name__ == "__main__":
                     cv.putText(output, "Appuyez sur 's' pour sauvegarder le calibrage", 
                             (width//2 - 150, height - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
-
+                    saved_calib_scale = calib_scale
+                    saved_pixels_per_cm = pixels_per_cm
 
             if process_mode == "detect" :
 
@@ -431,10 +421,14 @@ if __name__ == "__main__":
                     circles = np.uint16(np.around(circles_det))
                     sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
 
-                    # Calcul automatique de l'échelle à partir des diamètres
-                    diameters_px = [2 * i[2] for i in sorted_circles]
-                    mean_diameter_px = np.mean(diameters_px)
-                    pixels_per_cm = mean_diameter_px / PHYSICAL["circle_diameter_cm"]
+                    if saved_pixels_per_cm is not None:
+                        pixels_per_cm = saved_pixels_per_cm
+                    else:
+                        # Fallback si l'utilisateur n'a pas fait de calibration avant
+                        diameters_px = [2 * i[2] for i in sorted_circles]
+                        mean_diameter_px = np.mean(diameters_px)
+                        pixels_per_cm = mean_diameter_px / PHYSICAL["circle_diameter_cm"]
+
 
                     # Rayon de communication converti en pixels
                     extra_radius_px = int(round(PHYSICAL["communication_radius_cm"] * pixels_per_cm))
