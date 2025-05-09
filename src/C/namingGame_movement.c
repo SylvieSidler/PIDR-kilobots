@@ -63,20 +63,20 @@ void random_direction(){
 void move(){
     switch(mydata->dir){
         case RIGHT:
-            spinup_motors();
-            set_motors(0,kilo_straight_right);
+            //spinup_motors();
+            set_motors(0,150);
             break;
         case LEFT:
-            spinup_motors();
-            set_motors(kilo_straight_left,0);
+           // spinup_motors();
+            set_motors(150,0);
             break;
         case FORWARD:
-            spinup_motors();
-            set_motors(kilo_straight_left,kilo_straight_right);
+            //spinup_motors();
+            set_motors(150,150);
             break;
         case BACKWARD:
-            spinup_motors();
-            set_motors(kilo_turn_left,0);
+            //spinup_motors();
+            set_motors(150,0);
             break;
         case STOP:
             set_motors(0,0);
@@ -175,8 +175,8 @@ void loop() {
                     mydata->new_message=0;
                 }
             }
-            if (kilo_ticks>mydata->last_message_received_time+NO_RECEPTION){
-                mydata->last_message_received_time=kilo_ticks;
+            // if (kilo_ticks>mydata->last_message_received_time+NO_RECEPTION){
+            //     mydata->last_message_received_time=kilo_ticks;
                 move_kilobot();
                 if (kilo_ticks> mydata->move_cpt+MOVE_DELAY){
                     set_motors(0,0);
@@ -184,7 +184,7 @@ void loop() {
                     mydata->move_cpt = kilo_ticks;
                    
                 }
-            }
+            //}
 
             break;
     }
