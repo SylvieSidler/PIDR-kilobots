@@ -109,6 +109,12 @@ void loop() {
         return;
     }
     set_color(colours[mydata->personalWord]);
+    if (mydata->no_changes==1){
+        if (kilo_ticks>mydata->last_message_changed+ 32){
+            set_color(RGB(0,0,0));
+            mydata->last_message_changed=kilo_ticks;
+        }
+    }
     switch(mydata->stateLS){
         case SPEAKER:
             //set_color(RGB(3,0,0));
@@ -147,16 +153,7 @@ void loop() {
                 mydata->last_message_changed=kilo_ticks;
                 
 
-            }
-
-            if (mydata->no_changes==1){
-                set_color(RGB(0,0,0));
-                if (kilo_ticks>mydata->last_message_changed+ 32){
-                    set_color(colours[mydata->personalWord]);
-                    mydata->last_message_changed=kilo_ticks;
-                }
-            }
-            
+            } 
             break;
     }
     if (kilo_ticks> mydata->state_cpt +STATE_DELAY){
