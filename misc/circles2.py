@@ -50,25 +50,7 @@ class CircleDrawer(object):
         if bbox:
             cv.rectangle(output, (x - r, y - r), (x + r, y + r), self._center_color, self._center_thickness)
 
-def get_led_color_name(hue):
-    # violet : 140
-    # bleu : 120
-    if 0 <= hue <= 10 or 160 <= hue <= 180:
-        return hue#"rouge"
-    elif 10 < hue <= 30:
-        return hue#"orange"
-    elif 30 < hue <= 45:
-        return hue#"jaune"
-    elif 45 < hue <= 85:
-        return hue#"vert"
-    elif 85 < hue <= 130:
-        return hue#"bleu"
-    elif 130 < hue <= 160:
-        return hue#"violet"
-    else:
-        return hue#"inconnu"
-
-def detect_led_color_in_circle(bgr_image, center, radius, num_edge_samples=8, sample_radius=4):
+def detect_led_hue_in_circle(bgr_image, center, radius, num_edge_samples=8, sample_radius=4):
     h, w = bgr_image.shape[:2]
     x_c, y_c = int(center[0]), int(center[1])
     hsv = cv.cvtColor(bgr_image, cv.COLOR_BGR2HSV)
@@ -104,22 +86,15 @@ def detect_led_color_in_circle(bgr_image, center, radius, num_edge_samples=8, sa
             best_score = score
             best_hue = mean_h
 
-    # 1. Tester le centre
     evaluate_region(x_c, y_c)
 
-    # 2. Tester les bords du cercle
     angles = np.linspace(0, 2 * np.pi, num_edge_samples, endpoint=False)
     for angle in angles:
         x = int(x_c + radius * 0.6 * np.cos(angle))
         y = int(y_c + radius * 0.6 * np.sin(angle))
         evaluate_region(x, y)
 
-    if best_hue is None:
-        return "inconnu"
-
-    return get_led_color_name(best_hue)
-
-
+    return best_hue
 
 # Callback vide pour les trackbars OpenCV
 def nothing(*arg):
@@ -435,7 +410,7 @@ if __name__ == "__main__":
 
                     centers_px = []
                     centers_cm = []
-                    detected_colors = []
+                    hue_values = []
 
 
                     for idx, i in enumerate(sorted_circles):
@@ -453,13 +428,9 @@ if __name__ == "__main__":
                         cv.putText(output, f"{idx+1}", (x_px + 10, y_px - 10),
                                 cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
 
-                        color_name = detect_led_color_in_circle(frame, (x_px, y_px), r_px)
-                        detected_colors.append(color_name)
-                        
-                        # --- Détection de couleur LED ---
-                        led_color = detect_led_color_in_circle(frame, (x_px, y_px), r_px)
-                        cv.putText(output, f"{led_color}", (x_px + 10, y_px + 10),
-                                cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                        hue = detect_led_hue_in_circle(frame, (x_px, y_px), r_px)
+                        if hue is not None:
+                            hue_values.append(hue)
 
                         # Cercle supplémentaire de communication (en bleu)
                         if AFFICHAGE["cercle_communication"] == True :
@@ -491,10 +462,11 @@ if __name__ == "__main__":
                                 if AFFICHAGE["lien_communication"] == True :
                                     cv.line(output, centers_px[i], centers_px[j], (0, 0, 0), 2)
                     
-                    if detected_colors and all(c == detected_colors[0] for c in detected_colors):
-                        cv.putText(output, "Success: All LEDs are the same color!",
-                                (50, 50), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
-
+                    if len(hue_values) >= 2:
+                        hue_std = np.std(hue_values)
+                        if hue_std < 5:  # seuil à ajuster selon sensibilité désirée
+                            cv.putText(output, "All Success: LED hues match!",
+                                    (50, 50), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
 
         # Affichage des contours (optionnel, pour visualisation)
         if edges is not None:
