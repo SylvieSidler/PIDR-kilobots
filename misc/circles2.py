@@ -175,6 +175,20 @@ if __name__ == "__main__":
 
     process_mode = "calib"
 
+    # Charger les paramètres de calibrage s'ils existent
+    calibration_file = 'camera_calibration.json'
+    saved_pixels_per_cm = None
+    saved_grid_angle_deg = None
+
+    try:
+        with open(calibration_file, 'r') as f:
+            calib_data = json.load(f)
+            saved_pixels_per_cm = calib_data.get('pixels_per_cm')
+            saved_grid_angle_deg = calib_data.get('grid_angle_deg')
+            print(f"Calibrage chargé: {saved_pixels_per_cm:.2f} pixels/cm, angle: {saved_grid_angle_deg:.1f} degrés")
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("Aucun fichier de calibrage trouvé ou fichier invalide.")
+
     while True:
 
         counter += 1
@@ -216,16 +230,169 @@ if __name__ == "__main__":
                                           minRadius=min_rad,
                                           maxRadius=max_rad)
 
-            if process_mode == "calib" :
+            if process_mode == "calib":
+                # Ajouter un trackbar pour l'échelle de calibration
+                if not hasattr(cv, 'calib_scale_created'):
+                    cv.createTrackbar('Scale(%)', 'frame', 100, 500, nothing)
+                    cv.calib_scale_created = True
+
+                # Récupérer la valeur de l'échelle (100% par défaut)
+                calib_scale_percent = cv.getTrackbarPos('Scale(%)', 'frame')
+                calib_scale = calib_scale_percent / 100.0
+
                 if circles_det is not None:
                     circles = np.uint16(np.around(circles_det))
-                    sorted_circles = sorted(circles[0, :], key=lambda c: (c[1], c[0]))
-
-                    # Calcul automatique de l'échelle à partir des diamètres
-                    diameters_px = [2 * i[2] for i in sorted_circles]
-                    mean_diameter_px = np.mean(diameters_px)
-                    pixels_per_cm = mean_diameter_px / PHYSICAL["calib_diametre_cm"]
                     
+                    # Trier les cercles par position Y (le plus haut d'abord)
+                    sorted_circles_by_y = sorted(circles[0, :], key=lambda c: c[1])
+                    
+                    # Le cercle de référence (le plus haut)
+                    ref_circle = sorted_circles_by_y[0]
+                    ref_x, ref_y, ref_radius = ref_circle
+                    
+                    # Le cercle le plus bas pour l'orientation
+                    bottom_circle = sorted_circles_by_y[-1]
+                    
+                    # Dessiner le cercle de référence en rouge
+                    cv.circle(output, (ref_x, ref_y), ref_radius, (0, 0, 255), 2)
+                    cv.putText(output, "REF", (ref_x + 10, ref_y), 
+                            cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    
+                    # Dessiner le cercle le plus bas en bleu
+                    cv.circle(output, (bottom_circle[0], bottom_circle[1]), bottom_circle[2], (255, 0, 0), 2)
+                    cv.putText(output, "BOT", (bottom_circle[0] + 10, bottom_circle[1]), 
+                            cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    
+                    dx = bottom_circle[0] - ref_x
+                    dy = bottom_circle[1] - ref_y
+
+                    # Angle absolu d'inclinaison (en radians)
+                    if ref_x < bottom_circle[0]:
+                        grid_angle_rad = abs(math.atan2(dy, dx))
+                    else :
+                        grid_angle_rad = abs(math.atan2(dy, -dx))
+
+                    grid_angle_deg = math.degrees(grid_angle_rad)
+
+                    # Dessiner la ligne horizontale et la ligne entre les cercles pour visualisation
+                    horiz_end_x = ref_x + 100  # 100 pixels à droite pour l'horizontale
+                    cv.line(output, (ref_x, ref_y), (horiz_end_x, ref_y), (255, 255, 0), 2)  # Ligne horizontale en jaune
+                    cv.line(output, (ref_x, ref_y), (bottom_circle[0], bottom_circle[1]), (0, 165, 255), 2)  # Ligne entre cercles en orange
+                    
+                    angle = grid_angle_rad  # Pour maintenir la compatibilité avec le reste du code
+                    
+                    # Paramètres de la grille
+                    circle_diameter_cm = 2.5  # Diamètre des cercles: 2.5 cm
+                    space_between_circles_cm = 0.2  # Espace entre les cercles: 2 mm = 0.2 cm
+                    
+                    # Calculer la distance totale entre le premier et le dernier cercle
+                    # Si nous avons 7 cercles au total (y compris REF et BOT), nous avons 6 espaces
+                    total_circles = 7
+                    total_spaces = total_circles - 1
+                    
+                    # Distance totale = somme des diamètres + somme des espaces
+                    total_distance_cm = (total_circles * circle_diameter_cm) + (total_spaces * space_between_circles_cm)
+                    
+                    # Définir l'unité de base pour la grille (en pixels, ajustée par l'échelle)
+                    base_unit = circle_diameter_cm * 20 * calib_scale  # 20 pixels/cm à 100% d'échelle
+                    
+                    # Calculer la distance entre les centres des cercles
+                    center_to_center_cm = circle_diameter_cm + space_between_circles_cm
+                    center_to_center_px = center_to_center_cm * 20 * calib_scale
+                    
+                    # Calculer la distance totale en pixels
+                    total_distance_px = np.sqrt((bottom_circle[0] - ref_x)**2 + (bottom_circle[1] - ref_y)**2)
+                    
+                    # Calculer la longueur totale de la diagonale (distance entre REF et BOT)
+                    diagonal_length = math.sqrt((bottom_circle[0] - ref_x)**2 + (bottom_circle[1] - ref_y)**2)
+                    
+                    if diagonal_length > 0:  # Éviter division par zéro
+                        dx = bottom_circle[0] - ref_x
+                        dy = bottom_circle[1] - ref_y
+
+                        if ref_x < bottom_circle[0]:
+                            unit_x = dx / diagonal_length
+                            unit_y = dy / diagonal_length
+                        else:
+                            unit_x = -dx / diagonal_length
+                            unit_y = dy / diagonal_length
+                    else:
+                        unit_x, unit_y = 0, 0
+
+                    
+                    # Calculer le vecteur unitaire perpendiculaire à la diagonale
+                    # Pour obtenir un vecteur perpendiculaire, on permute les composantes et on change le signe d'une
+                    perp_unit_x = -unit_y  # perpendiculaire dans le sens horaire
+                    perp_unit_y = unit_x
+                        
+                    # Calculer la distance entre les centres des cercles le long de la diagonale
+                    # Pour 7 cercles uniformément répartis
+                    step_distance = diagonal_length / (total_circles - 1)
+                    
+                    # Rayon basé sur le diamètre donné et l'échelle
+                    abs_r = int((circle_diameter_cm / 2) * 20 * calib_scale)
+
+                    # Distance entre les bords des cercles latéraux et du central = 0.2 cm
+                    lateral_gap_px = 0.2 * 20 * calib_scale  # 2 mm convertis en pixels avec échelle
+
+                    # Distance entre centres = diamètre en pixels + espace entre bords
+                    current_center_to_center_px = (2 * abs_r) + lateral_gap_px
+
+                    
+                    # Calculer et stocker les positions absolues des cercles
+                    circle_positions = []
+                    
+                    for i in range(total_circles):
+                        # Distance depuis le cercle de référence le long de la diagonale
+                        distance = i * step_distance
+
+                        # Position absolue dans l'image pour le cercle central (sur la diagonale)
+                        if ref_x < bottom_circle[0]:
+                            center_x = int(ref_x + unit_x * distance)
+                        else : 
+                            center_x = int(ref_x - unit_x * distance)
+                        center_y = int(ref_y + unit_y * distance)
+                        
+                        # Ajouter le cercle central (sur la diagonale)
+                        circle_positions.append((center_x, center_y, abs_r, f"{i}C"))
+                        
+                        # # Ajouter les cercles latéraux seulement pour les cercles 1 à 5
+                        # if 1 <= i <= 5:
+                        #     left_x = int(center_x + perp_unit_x * current_center_to_center_px)
+                        #     left_y = int(center_y + perp_unit_y * current_center_to_center_px)
+                        #     circle_positions.append((left_x, left_y, abs_r, f"{i}L"))
+
+                        #     right_x = int(center_x - perp_unit_x * current_center_to_center_px)
+                        #     right_y = int(center_y - perp_unit_y * current_center_to_center_px)
+                        #     circle_positions.append((right_x, right_y, abs_r, f"{i}R"))
+
+                    # Dessiner tous les cercles de la grille idéale
+                    for abs_x, abs_y, abs_r, label in circle_positions:
+                        
+                        # Couleur verte pour la grille idéale
+                        cv.circle(output, (abs_x, abs_y), abs_r, (0, 255, 0), 1)
+                        cv.putText(output, label, (abs_x - 5, abs_y + 5), 
+                                cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+                    
+                    # Calcul du rapport pixels/cm basé sur l'échelle actuelle
+                    pixels_per_cm = base_unit / circle_diameter_cm
+                    
+                    # Afficher les informations de calibrage
+                    cv.putText(output, f"Angle: {grid_angle_deg:.1f} deg", (20, 30), 
+                            cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                    cv.putText(output, f"Scale: {calib_scale:.2f}x", (20, 60), 
+                            cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                    cv.putText(output, f"Pixels/cm: {pixels_per_cm:.2f}", (20, 90), 
+                            cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                    
+                    # Instructions pour l'utilisateur
+                    cv.putText(output, "Ajustez 'Scale(%)' pour faire correspondre la grille verte", 
+                            (width//2 - 200, height - 30), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                    
+                    # Ajouter un bouton pour sauvegarder le calibrage (touche 's')
+                    cv.putText(output, "Appuyez sur 's' pour sauvegarder le calibrage", 
+                            (width//2 - 150, height - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                
 
             if process_mode == "detect" :
 
@@ -379,6 +546,37 @@ if __name__ == "__main__":
             process_mode = "calib"
         if 0xFF & key == ord('d'):
             process_mode = "detect"
+        elif 0xFF & key == ord('s') and process_mode == "calib" and 'pixels_per_cm' in locals() and 'grid_angle_deg' in locals():
+            # Sauvegarder les informations de calibrage dans un fichier
+            calib_data = {
+                "pixels_per_cm": pixels_per_cm,
+                "grid_angle_deg": grid_angle_deg,
+                "calibration_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "reference_circle": {
+                    "x": ref_x,
+                    "y": ref_y,
+                    "radius": ref_radius
+                },
+                "bottom_circle": {
+                    "x": bottom_circle[0],
+                    "y": bottom_circle[1],
+                    "radius": bottom_circle[2]
+                }
+            }
+            
+            with open('camera_calibration.json', 'w') as f:
+                json.dump(calib_data, f, indent=4)
+            
+            print(f"Calibrage sauvegardé: {pixels_per_cm:.2f} pixels/cm")
+            
+            # Afficher un message temporaire sur l'image
+            overlay = output.copy()
+            cv.rectangle(overlay, (width//2 - 150, height//2 - 30), 
+                        (width//2 + 150, height//2 + 30), (0, 0, 0), -1)
+            cv.addWeighted(overlay, 0.7, output, 0.3, 0, output)
+            cv.putText(output, "Calibrage sauvegardé!", 
+                    (width//2 - 120, height//2), 
+                    cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
     # Nettoyage
     cv.destroyAllWindows()

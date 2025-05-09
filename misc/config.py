@@ -6,7 +6,7 @@ HTTP_SERVER = {
         "start": "/start",
         "stop": "/stop",
         "set_resolution": "/set_resolution/mode3",
-        "set_camera": "/set_camera/2",
+        "set_camera": "/set_camera/0",
         "capture_image": "/capture_image"
     }
 }
@@ -53,15 +53,18 @@ ENVIRONMENTS = {
     },
     "autre": {
         "hough": {
-            "param1": 40,
-            "param2": 40,
-            "min_radius": 60,
-            "max_radius": 62,
+            "param1": 50,
+            "param2": 50,
+            "min_radius": 72,
+            "max_radius": 76,
             "distance_max": 10
         },
         "physical": {
-            "circle_diameter_cm": 3,
-            "communication_radius_cm": 7
+            "circle_diameter_cm": 3.3,
+            "communication_radius_cm": 7,
+            "calib_diametre_cm" : 2.5,
+            "nb_calib_circles" : 4,
+            "calib_circles_spe_cm" : 1.3
         }
     }
 }
