@@ -21,6 +21,8 @@ typedef struct {
     uint32_t receive_cpt;
     uint32_t state_cpt;
     uint32_t delay_start;
+    uint32_t last_message_changed;
+    uint8_t no_changes;
 } USERDATA;
 
 
@@ -49,6 +51,13 @@ void deleteLinksExceptWord(uint8_t object, uint8_t keepWord) {
         if (mydata->links[i].word != keepWord) { // && mydata->links[i].object == object // si plusieurs objets
             mydata->links[i].boolean = 0;
         }
+    }
+}
+
+void blink(){
+    set_color(RGB(0,0,0));
+    if (kilo_ticks>kilo_ticks+ 32){
+     set_color(colours[mydata->personalWord]);
     }
 }
 
@@ -85,7 +94,9 @@ void setup() {
     mydata->send_cpt=kilo_ticks;
     mydata->receive_cpt=kilo_ticks;
     mydata->state_cpt=kilo_ticks;
+    mydata->last_message_changed=kilo_ticks;
     mydata->delay_start=0;//rand()%320;
+    mydata->no_changes=0;
     rand_seed(rand_hard());
     generateWord();
     set_color(colours[0]);
@@ -120,6 +131,10 @@ void loop() {
                 if (mydata->new_message==1){
                     int random = rand_soft()%10;
                     if (random > 6){
+                        if (mydata->personalWord !=mydata->rvd_message.data[1]){
+                            mydata->no_changes=0;
+                            mydata->last_message_changed=kilo_ticks; 
+                        }
                         mydata->personalWord = mydata->rvd_message.data[1];
                         generateLink(mydata->object,mydata->personalWord);
                         deleteLinksExceptWord(mydata->object,mydata->personalWord);
@@ -127,6 +142,21 @@ void loop() {
                     mydata->new_message=0;
                 }
             }
+            if (kilo_ticks>mydata->last_message_changed+10*NO_RECEPTION){
+                mydata->no_changes=1;
+                mydata->last_message_changed=kilo_ticks;
+                
+
+            }
+
+            if (mydata->no_changes==1){
+                set_color(RGB(0,0,0));
+                if (kilo_ticks>mydata->last_message_changed+ 32){
+                    set_color(colours[mydata->personalWord]);
+                    mydata->last_message_changed=kilo_ticks;
+                }
+            }
+            
             break;
     }
     if (kilo_ticks> mydata->state_cpt +STATE_DELAY){
@@ -137,6 +167,7 @@ void loop() {
                 mydata->stateLS = LISTENER;
                 mydata->message_ready=0;
                 mydata->receive_cpt=kilo_ticks;
+                mydata->last_message_changed=kilo_ticks;
                 //set_color(RGB(0,0,3));
             }
             else{
