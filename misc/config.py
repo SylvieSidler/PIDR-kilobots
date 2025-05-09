@@ -16,6 +16,11 @@ IMAGE = {
     "height": 600
 }
 
+AFFICHAGE = {
+    "cercle_communication" : False,
+    "lien_communication" : False
+}
+
 ENVIRONMENTS = {
     "maison": {
         "hough": {
@@ -27,33 +32,39 @@ ENVIRONMENTS = {
         },
         "physical": {
             "circle_diameter_cm": 3.3,  
-            "communication_radius_cm": 3.5
+            "communication_radius_cm": 7
         }
     },
     "laboratoire": {
         "hough": {
-            "param1": 32,
-            "param2": 32,
-            "min_radius": 9,
-            "max_radius": 11,
+            "param1": 42,
+            "param2": 42,
+            "min_radius": 8,
+            "max_radius": 12,
             "distance_max": 10
         },
         "physical": {
             "circle_diameter_cm": 3.3,
-            "communication_radius_cm": 3.5
+            "communication_radius_cm": 7,
+            "calib_diametre_cm" : 2.5,
+            "nb_calib_circles" : 4,
+            "calib_circles_spe_cm" : 1.3
         }
     },
     "autre": {
         "hough": {
-            "param1": 40,
-            "param2": 40,
-            "min_radius": 60,
-            "max_radius": 62,
+            "param1": 50,
+            "param2": 50,
+            "min_radius": 72,
+            "max_radius": 76,
             "distance_max": 10
         },
         "physical": {
-            "circle_diameter_cm": 3,
-            "communication_radius_cm": 3.5
+            "circle_diameter_cm": 3.3,
+            "communication_radius_cm": 7,
+            "calib_diametre_cm" : 2.5,
+            "nb_calib_circles" : 4,
+            "calib_circles_spe_cm" : 1.3
         }
     }
 }

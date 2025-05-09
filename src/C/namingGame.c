@@ -143,10 +143,10 @@ void loop() {
     if (mydata->delay_start--<=0){
         return;
     }
-    //set_color(colours[mydata->personalWord]);
+    set_color(colours[mydata->personalWord]);
     switch(mydata->stateLS){
         case SPEAKER:
-            set_color(RGB(3,0,0));
+            //set_color(RGB(3,0,0));
             if (kilo_ticks > mydata->send_cpt + SEND_DELAY){
                 mydata->send_cpt =kilo_ticks;
                 mydata->transmit_msg.type= NORMAL;
@@ -159,7 +159,7 @@ void loop() {
             move();
             break;
         case LISTENER:
-            set_color(RGB(0,0,3));
+            //set_color(RGB(0,0,3));
             if (kilo_ticks > mydata->receive_cpt+ RECEIVE_DELAY){
                 mydata->receive_cpt=kilo_ticks;
                 if (mydata->new_message==1){
@@ -198,12 +198,12 @@ void loop() {
                 mydata->receive_cpt=kilo_ticks;
                 mydata->move_cpt = kilo_ticks;
                 mydata->last_message_received_time=kilo_ticks;
-                set_color(RGB(0,0,3));
+                //set_color(RGB(0,0,3));
             }
             else{
                 mydata->stateLS = SPEAKER;
                 mydata->send_cpt=kilo_ticks;
-                set_color(RGB(3,0,0));
+                //set_color(RGB(3,0,0));
                 mydata->dir=STOP;
                 mydata->move_cpt = kilo_ticks;
                 move();
