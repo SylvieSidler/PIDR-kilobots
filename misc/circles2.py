@@ -111,16 +111,15 @@ if __name__ == "__main__":
 
     width = IMAGE["width"]
     height = IMAGE["height"]
-    process_mode = "calib"
 
     # Paramètres de la transformée de Hough pour la détection de cercles
     diag = math.sqrt(width**2 + height**2)
     dist = int(.9 * diag)
-    
-    process_mode = "calib"
 
     saved_calib_scale = None
     saved_pixels_per_cm = None
+
+    process_mode = "calib"
 
     if process_mode in HOUGH :
         hough_mode_config = HOUGH[process_mode]
@@ -158,7 +157,26 @@ if __name__ == "__main__":
     drawer = CircleDrawer()
     kernel = np.ones(IMAGE_PROCESSING["kernel"], np.uint8)
 
+    first_change_mode = True
+
     while True:
+        if first_change_mode :
+            if process_mode in HOUGH :
+                hough_mode_config = HOUGH[process_mode]
+                
+            min_rad = hough_mode_config["min_radius"]
+            max_rad = hough_mode_config["max_radius"]
+            dmax = hough_mode_config["distance_max"]
+            hough_param_1 = hough_mode_config["param1"]
+            hough_param_2 = hough_mode_config["param2"]
+
+            cv.createTrackbar('par1', 'frame', hough_param_1, 500, nothing)
+            cv.createTrackbar('par2', 'frame', hough_param_2, 500, nothing)
+            cv.createTrackbar('dmax', 'frame', dmax, 50, nothing)
+            cv.createTrackbar('minr', 'frame', min_rad, int(width / 2), nothing)
+            cv.createTrackbar('maxr', 'frame', max_rad, int(width / 2), nothing)
+
+            first_change_mode = False
 
         counter += 1
         # Capture de l'image via HTTP et désérialisation
@@ -434,10 +452,7 @@ if __name__ == "__main__":
 
                         # Cercle supplémentaire de communication (en bleu)
                         if AFFICHAGE["cercle_communication"] == True :
-                            if led_color == "rouge":
-                                cv.circle(output, (x_px, y_px), extra_radius_px, (0, 0, 255), 1)
-                            else :
-                                cv.circle(output, (x_px, y_px), extra_radius_px, (255, 0, 0), 1)
+                            cv.circle(output, (x_px, y_px), extra_radius_px, (255, 0, 0), 1)
 
                     # Afficher l'échelle utilisée
                     cv.putText(output, f"1 cm = {pixels_per_cm:.2f} px", (20, output.shape[0] - 20),
@@ -522,8 +537,8 @@ if __name__ == "__main__":
 
                 for idx, (x_cm, y_cm) in enumerate(centers_cm):
                     text = f"ID {idx+1}: ({x_cm:.1f} cm, {y_cm:.1f} cm)"
-                    #cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
-                    #        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
+                    cv.putText(output, text, (x0 + 10, y0 + 20 + idx * 20),
+                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
 
         # Affichage de l'image
         cv.imshow('frame', output)
@@ -534,7 +549,9 @@ if __name__ == "__main__":
             break
         if 0xFF & key == ord('c'):
             process_mode = "calib"
+            first_change_mode = True
         if 0xFF & key == ord('d'):
+            first_change_mode = True
             process_mode = "detect"
         elif 0xFF & key == ord('s') and process_mode == "calib" and 'pixels_per_cm' in locals() and 'grid_angle_deg' in locals():
             # Sauvegarder les informations de calibrage dans un fichier

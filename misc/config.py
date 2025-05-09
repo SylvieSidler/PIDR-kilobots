@@ -17,8 +17,8 @@ IMAGE = {
 }
 
 AFFICHAGE = {
-    "cercle_communication" : False,
-    "lien_communication" : False
+    "cercle_communication" : True,
+    "lien_communication" : True
 }
 
 ENVIRONMENTS = {
@@ -45,8 +45,8 @@ ENVIRONMENTS = {
                 "distance_max": 10
             },
             "detect": {
-                "param1": 42,
-                "param2": 42,
+                "param1": 46,
+                "param2": 46,
                 "min_radius": 8,
                 "max_radius": 12,
                 "distance_max": 10
