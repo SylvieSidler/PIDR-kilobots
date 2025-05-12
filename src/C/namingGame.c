@@ -28,6 +28,11 @@ typedef struct {
 
 REGISTER_USERDATA(USERDATA);
 
+#define n 18
+uint8_t all_kb_word_list[n];
+int first_time=1;
+
+
 
 
 
@@ -82,6 +87,17 @@ void message_rx(message_t *msg, distance_measurement_t *dist ){
     }
 }
 
+int all_same(){
+    int i=0;
+    while (i+1<n){
+        if (all_kb_word_list[i]!=all_kb_word_list[i+1]){
+            return 0;
+        }
+        i++;
+    }
+    return 1;
+}
+
 
 void setup() { 
     mydata->object = OBJECT;
@@ -100,11 +116,15 @@ void setup() {
     rand_seed(rand_hard());
     generateWord();
     set_color(colours[0]);
+    all_kb_word_list[kilo_uid]= mydata->personalWord;
 }
 
 
 void loop() {
-
+    if (all_same()&& first_time){
+        first_time=0;
+        printf("Consensus reached in: %d kilo_ticks and %d seconds\n",kilo_ticks,kilo_ticks/32);
+    }
     if (mydata->delay_start--<0){
         return;
     }
@@ -142,6 +162,7 @@ void loop() {
                             mydata->last_message_changed=kilo_ticks; 
                         }
                         mydata->personalWord = mydata->rvd_message.data[1];
+                        all_kb_word_list[kilo_uid]= mydata->personalWord ;
                         generateLink(mydata->object,mydata->personalWord);
                         deleteLinksExceptWord(mydata->object,mydata->personalWord);
                     }
@@ -151,8 +172,6 @@ void loop() {
             if (kilo_ticks>mydata->last_message_changed+10*NO_RECEPTION){
                 mydata->no_changes=1;
                 mydata->last_message_changed=kilo_ticks;
-                
-
             } 
             break;
     }
