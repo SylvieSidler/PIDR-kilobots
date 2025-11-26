@@ -1,41 +1,18 @@
 # pidr-24-25-kilobots
 
-## Name
-Choose a self-explaining name for your project.
-
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Les Kilobots sont des robots de petite taille (3cm de diamètre) utilisés dans l’études de la robotique en essaim. 
+Il s’agit de dispositifs robotiques avec des dizaines d’éléments. Ces robots sont capables de communiquer localement et de se mouvoir par vibration. Cette plateforme est un banc d’essai, qui permet d’étudier à petite échelle en laboratoire des algorithmes qui pourront être déployés sur d’autres robots de plus grande envergure. 
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Dans le domaine de la robotique en essaim, l’émergence de comportements collectifs cohérents à partir d’interactions locales représente un défi majeur. Ce projet se concentre sur l’implémentation et l’analyse du _Naming Game_, un modèle d’émergence de consensus linguistique, au sein d’un groupe de robots Kilobots. 
+Notre objectif est d’évaluer les dynamiques temporelles nécessaires à un groupe de N robots pour atteindre un accord global. Nous avons adapté le Naming Game aux contraintes matérielles des Kilobots et développé une approche méthodologique combinant trois axes : la programmation des robots, l’utilisation du simulateur Kilombo, et l’analyse d’images pour le suivi des interactions. 
+Les résultats montrent que la structure du réseau d’interaction impacte significativement le temps de convergence, les configurations se rapprochant d’un graphe complet atteignant un consensus plus rapidement.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+**Mots clés** : robotique en essaim, analyse d’image, diffusion de l’information, Naming Game
+**Environnement de travail** (matériel, logiciel) : Une arène robotique en construction sera mise à disposition des étudiants ainsi qu’un ensemble de robots. Les kilobots sont programmables en C, quelques connaissances dans ce langage seront nécessaires. Un simulateur de robots est aussi disponible pour test avant le déploiement. Les étudiants auront accès au CreativeLab du Loria.
 
 ## Installation
 Le [compte rendu n°2 de réunion](./reunions/cr2_0502.md) décrit toutes les procédures à suivre pour installer les bibliothèques nécessaires.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Rapport de projet 
+Le rapport sous format d'article de recherche est disponible [ici](./PIDR_Rapport_Biche_Sidler_Vernicos.pdf) 
